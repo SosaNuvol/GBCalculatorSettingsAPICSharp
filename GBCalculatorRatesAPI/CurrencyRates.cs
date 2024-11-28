@@ -2,6 +2,8 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using GBCalculatorRatesAPI.Services;
+using GBCalculatorRatesAPI.Models;
 
 namespace GBCalculatorRatesAPI
 {
@@ -15,10 +17,16 @@ namespace GBCalculatorRatesAPI
         }
 
         [Function("CurrencyRates")]
-        public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
         {
             _logger.LogInformation("C# HTTP trigger function processed a request.");
-            return new OkObjectResult("Welcome to Azure Functions!");
+
+            var client = new HttpClient();
+            var services = new UPMAServices(client);
+
+			var payload = await services.GetRatesAsync<UPMAPayload>();
+
+            return new OkObjectResult(payload);
         }
     }
 }
