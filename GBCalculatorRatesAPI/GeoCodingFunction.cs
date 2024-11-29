@@ -1,6 +1,4 @@
 using GBCalculatorRatesAPI.Business;
-using GBCalculatorRatesAPI.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;

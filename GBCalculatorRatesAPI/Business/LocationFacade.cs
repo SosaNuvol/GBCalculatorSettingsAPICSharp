@@ -27,10 +27,17 @@ public class LocationFacade
 	{
 		var locations = await _locationsRepository.GetAllAsync();
 		var locationsWithCoordinates = new List<LocationWithCoordinates>();
+		var ranGC = 0;
+		var notRanGC = 0;
+		var notSet = 0;
 
 		foreach (var location in locations)
 		{
-			if (string.IsNullOrEmpty(location.BusinessAddress) || DontRunGeoCoding(location)) continue;
+			if (string.IsNullOrEmpty(location.BusinessAddress) || DontRunGeoCoding(location)) {
+				notRanGC++;
+				continue;
+			}
+			ranGC++;
 			var coordinates = await _geocodingServices.GeocodeAsync(location.BusinessAddress);
 			locationsWithCoordinates.Add(new LocationWithCoordinates
 			{
@@ -41,12 +48,18 @@ public class LocationFacade
 				Status = coordinates.Status ?? "[Not Set]"
 			});
 
+			if (string.IsNullOrEmpty(coordinates.Status)) notSet++;
+
 			location.GeoStatus = coordinates.Status ?? "[Not Set]";
 			location.Latitude = coordinates.Latitude;
 			location.Longitude = coordinates.Longitude;
 
 			await _locationsRepository.UpdateAsync(location._id, location);
 		}
+
+		_logger.LogInformation($"|| ** Not Ran: {notRanGC}");
+		_logger.LogInformation($"|| ** Ran: {ranGC}");
+		_logger.LogInformation($"|| ** Not Set: {notSet}");
 
 		return locationsWithCoordinates;
 	}
