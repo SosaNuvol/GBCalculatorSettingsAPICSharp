@@ -25,6 +25,8 @@ public class GeocodingService
         var content = await response.Content.ReadAsStringAsync();
         var json = JsonDocument.Parse(content);
 
+		var result = new GBGeoCodes();
+
         if (json.RootElement.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
         {
             var location = results[0]
@@ -34,9 +36,23 @@ public class GeocodingService
             var latitude = location.GetProperty("lat").GetDouble();
             var longitude = location.GetProperty("lng").GetDouble();
 
-            return new GBGeoCodes { Latitude = latitude, Longitude = longitude };
+			result.Latitude = latitude;
+			result.Longitude = longitude;
+			result.Status = $"Set|{DateTimeOffset.Now}";
+
+			if (results[0].TryGetProperty("formatted_address", out var formattedAddressProperty)) {
+				result.FormattedAddress = formattedAddressProperty.GetString();
+			}
+
+			if (results[0].TryGetProperty("plus_code", out var plusCodeProperty)) {
+				result.CompoundCode = plusCodeProperty.GetProperty("compound_code").GetString();
+				result.GlobalCode = plusCodeProperty.GetProperty("global_code").GetString();
+			}
+
+            return result;
         }
 
-        throw new Exception("Address not found.");
+		result.Status = "Address not found.";
+		return result;
     }
 }
