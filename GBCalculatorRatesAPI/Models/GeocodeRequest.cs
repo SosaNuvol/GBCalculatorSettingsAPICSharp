@@ -12,4 +12,7 @@ public class GeocodeRequest
 
 	[JsonProperty("radiusInMeters")]
     public double RadiusInMeters { get; set; }
+
+	[JsonProperty("zipCodes")]
+	public string? ZipCodes { get; set; }
 }

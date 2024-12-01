@@ -35,6 +35,14 @@ public class LocationFacade
 
 		return await _locationsRepository.FindAsync(filter);
 	}
+
+	public async Task<List<Location>> GetLocationsWithZipCodesAsync(string zipCodes)
+	{
+		var zipCodeList = zipCodes.Split(',').Select(z => z.Trim()).ToList();
+		var filter = Builders<Location>.Filter.In(l => l.GeoZipCode, zipCodeList);
+
+		return await _locationsRepository.FindAsync(filter);
+	}
  
 	public async Task<List<LocationWithCoordinates>> GeoCodeAllLocations()
 	{
@@ -66,6 +74,11 @@ public class LocationFacade
 			location.GeoStatus = coordinates.Status ?? "[Not Set]";
 			location.Latitude = coordinates.Latitude;
 			location.Longitude = coordinates.Longitude;
+			location.GeoCity = coordinates.City;
+			location.GeoZipCode = coordinates.PostalCode;
+			location.GeoStateProv = coordinates.StateProv;
+			location.GeoCounty = coordinates.County;
+			location.GeoCountry = coordinates.Country;
 
 			await _locationsRepository.UpdateAsync(location._id, location);
 		}
@@ -80,7 +93,7 @@ public class LocationFacade
 	private bool DontRunGeoCoding(Location location)
 	{
 		if (string.IsNullOrEmpty(location.GeoStatus)
-			|| !location.GeoStatus.Equals("Update")) return false;
+			|| location.GeoStatus.Equals("Update")) return false;
 
 		return true;
 	}

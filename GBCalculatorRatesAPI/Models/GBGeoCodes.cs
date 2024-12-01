@@ -36,4 +36,26 @@ public class GBGeoCodes: IGBGeoCodes {
 
 	[JsonProperty("status")]
 	public string? Status { get; set; }
+
+	[JsonProperty("city")]
+	public string? City { get; set; }
+
+	[JsonProperty("postalCode")]
+	public string? PostalCode { get; set; }
+
+	[JsonProperty("stateProv")]
+	public string? StateProv { get; set; }
+
+	[JsonProperty("county")]
+	public string? County { get; set; }
+
+	[JsonProperty("country")]
+	public string? Country { get; set; }
+
+	[JsonProperty("houseNumber")]
+	public string? HouseNumber { get; set; }
+
+	public void SetStatus(string input) {
+		Status = input;
+	}
 }

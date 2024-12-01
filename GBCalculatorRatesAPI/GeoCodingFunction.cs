@@ -1,5 +1,7 @@
 using GBCalculatorRatesAPI.Business;
 using GBCalculatorRatesAPI.Models;
+using GBCalculatorRatesAPI.Repos;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -49,11 +51,18 @@ public class GeocodeFunction
 			return req.CreateResponse(HttpStatusCode.BadRequest);
 		}
 
-		var result = await _locationFacade.GetLocationsWithinRadiusAsync(
-			geocodeRequest.Latitude,
-			geocodeRequest.Longitude,
-			geocodeRequest.RadiusInMeters
-		);
+		var result = new List<Location>();
+
+		if (string.IsNullOrEmpty(geocodeRequest.ZipCodes)) {
+			result = await _locationFacade.GetLocationsWithinRadiusAsync(
+				geocodeRequest.Latitude,
+				geocodeRequest.Longitude,
+				geocodeRequest.RadiusInMeters
+			);
+		} else {
+			result = await _locationFacade.GetLocationsWithZipCodesAsync(geocodeRequest.ZipCodes);
+		}
+
 
 		// Create response
 		var response = req.CreateResponse(HttpStatusCode.OK);

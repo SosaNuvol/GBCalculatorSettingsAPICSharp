@@ -1,6 +1,8 @@
 namespace GBCalculatorRatesAPI.Services;
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using DocumentFormat.OpenXml.Presentation;
 using GBCalculatorRatesAPI.Models;
 
 public class GeocodingService
@@ -26,6 +28,8 @@ public class GeocodingService
         var json = JsonDocument.Parse(content);
 
 		var result = new GBGeoCodes();
+		var rightNow = DateTimeOffset.Now;
+		result.SetStatus($"Set|{rightNow}");
 
         if (json.RootElement.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
         {
@@ -33,12 +37,13 @@ public class GeocodingService
                 .GetProperty("geometry")
                 .GetProperty("location");
 
+			BindAddressComponents(result, results[0]);
+
             var latitude = location.GetProperty("lat").GetDouble();
             var longitude = location.GetProperty("lng").GetDouble();
 
 			result.Latitude = latitude;
 			result.Longitude = longitude;
-			result.Status = $"Set|{DateTimeOffset.Now}";
 
 			if (results[0].TryGetProperty("formatted_address", out var formattedAddressProperty)) {
 				result.FormattedAddress = formattedAddressProperty.GetString();
@@ -55,4 +60,56 @@ public class GeocodingService
 		result.Status = "Address not found.";
 		return result;
     }
+
+	public void BindAddressComponents(GBGeoCodes geoCodes, JsonElement location) {
+		if (!location.TryGetProperty("address_components", out var addressCompList)) return;
+
+		if (TryFindAddressComponent(addressCompList, "locality", out var city))
+		{
+			geoCodes.City = city;
+		}
+		if (TryFindAddressComponent(addressCompList, "postal_code", out var postalCode))
+		{
+			geoCodes.PostalCode = postalCode;
+		}
+		if (TryFindAddressComponent(addressCompList, "administrative_area_level_1", out var stateProv))
+		{
+			geoCodes.StateProv = stateProv;
+		}
+		if (TryFindAddressComponent(addressCompList, "administrative_area_level_2", out var county))
+		{
+			geoCodes.County = county;
+		}
+		if (TryFindAddressComponent(addressCompList, "country", out var country))
+		{
+			geoCodes.Country = country;
+		}
+		if (TryFindAddressComponent(addressCompList, "street_number", out var houseNumber))
+		{
+			geoCodes.HouseNumber = houseNumber;
+		}
+
+	}
+
+	public bool TryFindAddressComponent(JsonElement addressCompList, string componentName, out string value) {
+		// var foundItem = addressCompList
+		value = string.Empty;
+
+		if (addressCompList.ValueKind != JsonValueKind.Array) return false;
+
+		foreach(JsonElement element in addressCompList.EnumerateArray()) {
+			if (!element.TryGetProperty("types", out var typesList)) continue;
+
+			foreach(var type in typesList.EnumerateArray()) {
+				var typeValue = type.GetString();
+				if (!string.IsNullOrEmpty(typeValue) && typeValue.Equals(componentName)) {
+
+					value = element.GetProperty("long_name").GetString() ?? string.Empty;
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
 }
