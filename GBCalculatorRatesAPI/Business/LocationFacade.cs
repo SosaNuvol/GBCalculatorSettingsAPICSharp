@@ -9,6 +9,7 @@ using GBCalculatorRatesAPI.Models;
 using GBCalculatorRatesAPI.Repos;
 using GBCalculatorRatesAPI.Services;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 
 public class LocationFacade
 {
@@ -22,8 +23,20 @@ public class LocationFacade
 		_locationsRepository = locationsRepository;
 		_geocodingServices = geocodingServices;
 	}
+
+	public async Task<List<Location>> GetLocationsWithinRadiusAsync(double latitude, double longitude, double radiusInMeters)
+	{
+		var filter = Builders<Location>.Filter.NearSphere(
+			l => l.LocationCoordinates,
+			longitude,
+			latitude,
+			radiusInMeters
+		);
+
+		return await _locationsRepository.FindAsync(filter);
+	}
  
-	public async Task<List<LocationWithCoordinates>> GetLocationsWithCoordinates()
+	public async Task<List<LocationWithCoordinates>> GeoCodeAllLocations()
 	{
 		var locations = await _locationsRepository.GetAllAsync();
 		var locationsWithCoordinates = new List<LocationWithCoordinates>();
@@ -81,7 +94,7 @@ public class LocationFacade
 			return true;
 		}
 		catch(Exception ex){
-			_logger.LogError("|| Error Dumping to Excell: ", ex.Message);
+			_logger.LogError($"|| ** Error Dumping to Excell: {ex.Message}");
 		}
 
 		return false;

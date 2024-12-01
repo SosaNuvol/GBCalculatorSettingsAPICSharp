@@ -1,8 +1,9 @@
+namespace GBCalculatorRatesAPI.Models;
+
 using GBCalculatorRatesAPI.Utilities;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-
-namespace GBCalculatorRatesAPI.Models;
+using MongoDB.Driver.GeoJsonObjectModel;
 
 public interface ILocation
 {
@@ -76,4 +77,13 @@ public class Location: ILocation
 	public string GeoStatus { get; set; } = "[Not Set]";
 	[BsonElement("geoMessage")]
 	public string? GeoMessage { get; set; }
+
+	[BsonElement("locationCoordinates")]
+	public GeoJsonPoint<GeoJson2DGeographicCoordinates> LocationCoordinates
+	{
+		get
+		{
+			return new GeoJsonPoint<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(Longitude ?? 0, Latitude ?? 0));
+		}
+	}
 }

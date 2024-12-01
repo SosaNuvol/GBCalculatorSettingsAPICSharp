@@ -25,6 +25,15 @@ public class LocationsRepository
 		var client = new MongoClient(_connectionString);
 		var database = client.GetDatabase(_dbName);
 		_locationsCollection = database.GetCollection<Location>(_collectionName);
+
+		// Create geospatial index
+		var indexKeysDefinition = Builders<Location>.IndexKeys.Geo2DSphere(l => l.LocationCoordinates);
+		_locationsCollection.Indexes.CreateOne(new CreateIndexModel<Location>(indexKeysDefinition));
+	}
+
+	public async Task<List<Location>> FindAsync(FilterDefinition<Location> filter)
+	{
+		return await _locationsCollection.Find(filter).ToListAsync();
 	}
 
 	public async Task<List<Location>> GetAllAsync()
