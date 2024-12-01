@@ -9,21 +9,21 @@ public interface ILocation
 {
 	string _id { get; set; }
 	int id { get; set; }
-	string BusinessName { get; set; }
-	string BusinessCategory { get; set; }
-	string BusinessDescription { get; set; }
-	string BusinessWebAddress { get; set; }
-	string BusinessPhone { get; set; }
-	string BusinessAddress { get; set; }
-	string BusinessLogoFileUrl { get; set; }
-	string SubmitedOn { get; set; }
-	string YourName { get; set; }
-	string YourPositionTitle { get; set; }
-	string YourPhone { get; set; }
-	string YourEmail { get; set; }
+	string? BusinessName { get; set; }
+	string? BusinessCategory { get; set; }
+	string? BusinessDescription { get; set; }
+	string? BusinessWebAddress { get; set; }
+	string? BusinessPhone { get; set; }
+	string? BusinessAddress { get; set; }
+	string? BusinessLogoFileUrl { get; set; }
+	string? SubmitedOn { get; set; }
+	string? YourName { get; set; }
+	string? YourPositionTitle { get; set; }
+	string? YourPhone { get; set; }
+	string? YourEmail { get; set; }
 	bool? ShowOnMap { get; set; }
-	string HowDidYouHearAboutUs { get; set; }
-	string Source { get; set; }
+	string? HowDidYouHearAboutUs { get; set; }
+	string? Source { get; set; }
 	double? Latitude { get; set; }
 	double? Longitude { get; set; }
 	string GeoStatus { get; set; }

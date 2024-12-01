@@ -94,7 +94,6 @@ public class GeocodeFunction
 			await response.WriteStringAsync($"Error: {ex.Message}");
 			return response;
 		}
-		return req.CreateResponse(HttpStatusCode.BadRequest);
 	}
 
 	private async Task<HttpResponseData?> DefaultAction(HttpRequestData req) {

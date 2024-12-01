@@ -19,7 +19,12 @@ namespace GBCalculatorRatesAPI.Services
             response.EnsureSuccessStatusCode();
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<T>(jsonResponse);
+            var result = JsonConvert.DeserializeObject<T>(jsonResponse);
+            if (result == null)
+            {
+                throw new Exception("Response from UPMA API returned an error or a null.");
+            }
+            return result;
         }
     }
 }
