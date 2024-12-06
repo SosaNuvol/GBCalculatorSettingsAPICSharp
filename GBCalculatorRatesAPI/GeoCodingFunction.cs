@@ -33,7 +33,7 @@ public class GeocodeFunction
 				return await HandleGet(req)
 					?? req.CreateResponse(HttpStatusCode.BadRequest);
 			case "POST":
-				return await HandlePost(req)
+				return await HandlePostFindLocations(req)
 					?? req.CreateResponse(HttpStatusCode.BadRequest);
 			default:
 				return req.CreateResponse(HttpStatusCode.BadRequest);
@@ -41,7 +41,7 @@ public class GeocodeFunction
 
     }
 
-	private async Task<HttpResponseData?> HandlePost(HttpRequestData req)
+	private async Task<HttpResponseData?> HandlePostFindLocations(HttpRequestData req)
 	{
 		var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 		var geocodeRequest = JsonConvert.DeserializeObject<GeocodeRequest>(requestBody);
@@ -51,7 +51,7 @@ public class GeocodeFunction
 			return req.CreateResponse(HttpStatusCode.BadRequest);
 		}
 
-		var result = new List<Location>();
+		List<LocationDbEntity>? result;
 
 		if (string.IsNullOrEmpty(geocodeRequest.ZipCodes)) {
 			result = await _locationFacade.GetLocationsWithinRadiusAsync(
@@ -63,8 +63,15 @@ public class GeocodeFunction
 			result = await _locationFacade.GetLocationsWithZipCodesAsync(geocodeRequest.ZipCodes);
 		}
 
-
 		// Create response
+		if (result == null) {
+			var badResponse = req.CreateResponse(HttpStatusCode.BadGateway);
+			badResponse.Headers.Remove("Content-Type");
+			badResponse.Headers.Add("Content-Type", "application/json; charset=utf-8");
+			
+			return badResponse;
+		}
+
 		var response = req.CreateResponse(HttpStatusCode.OK);
 		response.Headers.Remove("Content-Type");
 		response.Headers.Add("Content-Type", "application/json; charset=utf-8");
@@ -85,7 +92,7 @@ public class GeocodeFunction
 				return await DumpAction(req)
 					?? req.CreateResponse(HttpStatusCode.BadRequest);
 			default:
-				return await DefaultAction(req)
+				return await DefaultActionGetAllLocations(req)
 					?? req.CreateResponse(HttpStatusCode.BadRequest);
 		}
 	}
@@ -105,7 +112,7 @@ public class GeocodeFunction
 		}
 	}
 
-	private async Task<HttpResponseData?> DefaultAction(HttpRequestData req) {
+	private async Task<HttpResponseData?> DefaultActionGetAllLocations(HttpRequestData req) {
         try
         {
 			var result = await _locationFacade.GeoCodeAllLocations();

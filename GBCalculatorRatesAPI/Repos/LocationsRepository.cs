@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 public class LocationsRepository
 {
-	private readonly IMongoCollection<Location> _locationsCollection;
+	private readonly IMongoCollection<LocationDbEntity> _locationsCollection;
 	private readonly IConfiguration _configuration;
 	private readonly string _connectionString;
 	private readonly string _dbName;
@@ -24,43 +24,47 @@ public class LocationsRepository
 
 		var client = new MongoClient(_connectionString);
 		var database = client.GetDatabase(_dbName);
-		_locationsCollection = database.GetCollection<Location>(_collectionName);
+		_locationsCollection = database.GetCollection<LocationDbEntity>(_collectionName);
 
 		// Create geospatial index
-		var indexKeysDefinition = Builders<Location>.IndexKeys.Geo2DSphere(l => l.LocationCoordinates);
-		_locationsCollection.Indexes.CreateOne(new CreateIndexModel<Location>(indexKeysDefinition));
+		// var indexKeysDefinition = Builders<Location>.IndexKeys.Geo2DSphere(l => l.LocationCoordinates);
+		// _locationsCollection.Indexes.CreateOne(new CreateIndexModel<Location>(indexKeysDefinition));
 	}
 
-	public async Task<List<Location>> FindAsync(FilterDefinition<Location> filter)
+	public async Task<List<LocationDbEntity>> FindAsync(FilterDefinition<LocationDbEntity> filter)
 	{
 		return await _locationsCollection.Find(filter).ToListAsync();
 	}
 
-	public async Task<List<Location>> GetAllAsync()
-	{
-		return await _locationsCollection.Find(Builders<Location>.Filter.Empty).ToListAsync();
+	public async Task<List<LocationDbEntity>> QueryAsyn(BsonDocument query) {
+		return await _locationsCollection.Find(query).ToListAsync();
 	}
 
-	public async Task<Location> GetByIdAsync(string id)
+	public async Task<List<LocationDbEntity>> GetAllAsync()
 	{
-		var filter = Builders<Location>.Filter.Eq("_id", new ObjectId(id));
+		return await _locationsCollection.Find(Builders<LocationDbEntity>.Filter.Empty).ToListAsync();
+	}
+
+	public async Task<LocationDbEntity> GetByIdAsync(string id)
+	{
+		var filter = Builders<LocationDbEntity>.Filter.Eq("_id", new ObjectId(id));
 		return await _locationsCollection.Find(filter).FirstOrDefaultAsync();
 	}
 
-	public async Task CreateAsync(Location document)
+	public async Task CreateAsync(LocationDbEntity document)
 	{
 		await _locationsCollection.InsertOneAsync(document);
 	}
 
-	public async Task UpdateAsync(string id, Location document)
+	public async Task UpdateAsync(string id, LocationDbEntity document)
 	{
-		var filter = Builders<Location>.Filter.Eq("_id", new ObjectId(id));
+		var filter = Builders<LocationDbEntity>.Filter.Eq("_id", new ObjectId(id));
 		await _locationsCollection.ReplaceOneAsync(filter, document);
 	}
 
 	public async Task DeleteAsync(string id)
 	{
-		var filter = Builders<Location>.Filter.Eq("_id", new ObjectId(id));
+		var filter = Builders<LocationDbEntity>.Filter.Eq("_id", new ObjectId(id));
 		await _locationsCollection.DeleteOneAsync(filter);
 	}
 }

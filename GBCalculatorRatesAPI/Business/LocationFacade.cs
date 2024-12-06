@@ -4,11 +4,13 @@ using System;
 using System.Collections.Generic;
 using ClosedXML.Excel;
 using DnsClient.Internal;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using GBCalculatorRatesAPI.Business.Models;
 using GBCalculatorRatesAPI.Models;
 using GBCalculatorRatesAPI.Repos;
 using GBCalculatorRatesAPI.Services;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 public class LocationFacade
@@ -17,6 +19,8 @@ public class LocationFacade
 	private readonly LocationsRepository _locationsRepository;
 	private readonly GeocodingService _geocodingServices;
 
+	private const double radiansConstant = 6378.1; // Radius in radians: radius in km / Earth's radius (approx. 6378.1 km)
+
 	public LocationFacade(ILogger<LocationFacade> logger, LocationsRepository locationsRepository, GeocodingService geocodingServices)
 	{
 		_logger = logger;
@@ -24,22 +28,49 @@ public class LocationFacade
 		_geocodingServices = geocodingServices;
 	}
 
-	public async Task<List<Location>> GetLocationsWithinRadiusAsync(double latitude, double longitude, double radiusInMeters)
+	public async Task<List<LocationDbEntity>?> GetLocationsWithinRadiusAsync(double latitude, double longitude, double radiusInMeters)
 	{
-		var filter = Builders<Location>.Filter.NearSphere(
-			l => l.LocationCoordinates,
-			longitude,
-			latitude,
-			radiusInMeters
-		);
+		try {
+			var query = $@"
+			{{
+				""location"": {{
+					""$near"": {{
+						""$geometry"": {{
+							""type"": ""Point"",
+							""coordinates"": [{longitude}, {latitude}]
+						}},
+						""$maxDistance"": {radiusInMeters}
+					}}
+				}}
+			}}";
 
-		return await _locationsRepository.FindAsync(filter);
+			// Radius in radians: radius in km / Earth's radius (approx. 6378.1 km)
+			// var EarthRadius = 6378.1;
+			// double radiusInRadians = radiusInMeters / EarthRadius;
+
+			// var query2 = $@"
+			// {{
+			// 	""location"": {{
+			// 		""$geoWithin"": {{
+			// 			""$centerSphere"": [[{longitude}, {latitude}], {radiusInRadians}]
+			// 		}}
+			// 	}}
+			// }}";
+
+			var filter = new BsonDocumentFilterDefinition<LocationDbEntity>(BsonDocument.Parse(query));
+			
+			return await _locationsRepository.FindAsync(filter);
+		} catch(Exception ex) {
+			_logger.LogError($"|| ** Following error occured in GetLocationsWithinRadiusAsync with message: {ex.Message}");
+		}
+
+		return null;
 	}
 
-	public async Task<List<Location>> GetLocationsWithZipCodesAsync(string zipCodes)
+	public async Task<List<LocationDbEntity>> GetLocationsWithZipCodesAsync(string zipCodes)
 	{
 		var zipCodeList = zipCodes.Split(',').Select(z => z.Trim()).ToList();
-		var filter = Builders<Location>.Filter.In(l => l.GeoZipCode, zipCodeList);
+		var filter = Builders<LocationDbEntity>.Filter.In(l => l.GeoZipCode, zipCodeList);
 
 		return await _locationsRepository.FindAsync(filter);
 	}
@@ -90,10 +121,10 @@ public class LocationFacade
 		return locationsWithCoordinates;
 	}
 
-	private bool DontRunGeoCoding(Location location)
+	private bool DontRunGeoCoding(LocationDbEntity location)
 	{
 		if (string.IsNullOrEmpty(location.GeoStatus)
-			|| location.GeoStatus.Equals("Update")) return false;
+			|| !location.GeoStatus.Equals("Update")) return false;
 
 		return true;
 	}

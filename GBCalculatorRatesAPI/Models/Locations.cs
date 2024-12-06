@@ -36,7 +36,7 @@ public interface ILocation
 	string? GeoCountry { get; set; }
 }
 
-public class Location: ILocation
+public class LocationDbEntity: ILocation
 {
 	[BsonId]
 	[BsonElement("_id")]
@@ -122,12 +122,6 @@ public class Location: ILocation
     [BsonElement("geoCountry")]
     public string? GeoCountry { get; set; }
 
-	[BsonElement("locationCoordinates")]
-	public GeoJsonPoint<GeoJson2DGeographicCoordinates> LocationCoordinates
-	{
-		get
-		{
-			return new GeoJsonPoint<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(Longitude ?? 0, Latitude ?? 0));
-		}
-	}
+    [BsonElement("location")]
+	public GeoJsonPoint<GeoJson2DGeographicCoordinates>? Location { get; set; }
 }
