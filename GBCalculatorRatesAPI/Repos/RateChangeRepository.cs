@@ -27,9 +27,9 @@ public class RateChangeRepository {
 		_rateChangesCollection = database.GetCollection<RateChangeDbEntity>(_collectionName);
 	}
 
-	public async Task<DSMEnvelop<RateChangeDbEntity>> CreateAsync(RateChangeDbEntity document)
+	public async Task<DSMEnvelop<RateChangeDbEntity,RateChangeRepository>> CreateAsync(RateChangeDbEntity document)
 	{
-		var response = DSMEnvelop<RateChangeDbEntity>.Initialize();
+		var response = DSMEnvelop<RateChangeDbEntity,RateChangeRepository>.Initialize(_logger);
 
 		try {
 			await _rateChangesCollection.InsertOneAsync(document);

@@ -1,13 +1,11 @@
+namespace GBCalculatorRatesAPI.Business;
+
 using GBCalculatorRatesAPI.Models;
 using GBCalculatorRatesAPI.Repos;
 using GBCalculatorRatesAPI.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson.IO;
-using Newtonsoft.Json;
 using QUAD.DSM;
-
-namespace GBCalculatorRatesAPI.Business;
 
 public class RateChangeFacade 
 {
@@ -24,8 +22,8 @@ public class RateChangeFacade
 		_configuration = configuration;
 	}
 
-	public async Task<DSMEnvelop<ExchangeRateModel>> SaveChange(RateChangeRequest req) {
-		var response = DSMEnvelop<ExchangeRateModel>.Initialize();
+	public async Task<DSMEnvelop<ExchangeRateModel, RateChangeFacade>> SaveChange(RateChangeRequest req) {
+		var response = DSMEnvelop<ExchangeRateModel, RateChangeFacade>.Initialize(_logger);
 		var newRate = req.CurrentRate;
 
 		try {
@@ -54,8 +52,8 @@ public class RateChangeFacade
 		return response;
 	}
 
-	private DSMEnvelop<ExchangeRateModel> CreateResponse(decimal rate, ExchangeRateModel exchangeRates) {
-		var response = DSMEnvelop<ExchangeRateModel>.Initialize();
+	private DSMEnvelop<ExchangeRateModel, RateChangeFacade> CreateResponse(decimal rate, ExchangeRateModel exchangeRates) {
+		var response = DSMEnvelop<ExchangeRateModel, RateChangeFacade>.Initialize(_logger);
 
 		try {
 			var currenciesListString = _configuration["CURRENCY_LIST"];

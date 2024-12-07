@@ -2,16 +2,21 @@ namespace GBCalculatorRatesAPI.Services;
 
 using System.Text.Json;
 using GBCalculatorRatesAPI.Models;
+using Microsoft.Extensions.Logging;
 
 public class GeocodingService
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
 
-    public GeocodingService(HttpClient httpClient, string apiKey)
+	private readonly ILogger<GeocodingService> _logger;
+
+
+    public GeocodingService(HttpClient httpClient, string apiKey, ILogger<GeocodingService> logger)
     {
         _httpClient = httpClient;
         _apiKey = apiKey;
+		_logger = logger;
     }
 
     public async Task<GBGeoCodes> GeocodeAsync(string address)

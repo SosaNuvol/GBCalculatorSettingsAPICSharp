@@ -18,8 +18,16 @@ var host = new HostBuilder()
 			sp.GetRequiredService<ILogger<RateChangeRepository>>(), 
 			sp.GetRequiredService<IConfiguration>()
 		));
-		services.AddSingleton(sp => new GeocodingService(sp.GetRequiredService<HttpClient>(), "AIzaSyAVNxM9pV4iKF2LowPGKfi8GGg4X0E11i8"));
-		services.AddSingleton(sp => new ExchangeServices(sp.GetRequiredService<HttpClient>(), "AIzaSyAVNxM9pV4iKF2LowPGKfi8GGg4X0E11i8"));
+		services.AddSingleton(sp => new GeocodingService(
+			sp.GetRequiredService<HttpClient>(), 
+			"AIzaSyAVNxM9pV4iKF2LowPGKfi8GGg4X0E11i8",
+			sp.GetRequiredService<ILogger<GeocodingService>>()
+		));
+		services.AddSingleton(sp => new ExchangeServices(
+			sp.GetRequiredService<HttpClient>(), 
+			"AIzaSyAVNxM9pV4iKF2LowPGKfi8GGg4X0E11i8",
+			sp.GetRequiredService<ILogger<ExchangeServices>>()
+		));
 		services.AddSingleton<LocationFacade>();
 		services.AddSingleton<RateChangeFacade>();
 		// services.AddSingleton(sp => new LocationFacade(

@@ -1,7 +1,7 @@
+namespace GBCalculatorRatesAPI.Models;
+
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-
-namespace GBCalculatorRatesAPI.Models;
 
 [BsonIgnoreExtraElements]
 public class GeoLocationPoint {
