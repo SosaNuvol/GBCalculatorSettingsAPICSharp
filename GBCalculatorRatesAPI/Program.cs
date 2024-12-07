@@ -5,7 +5,6 @@ using GBCalculatorRatesAPI.Services;
 using Microsoft.Extensions.Configuration;
 using GBCalculatorRatesAPI.Business;
 using GBCalculatorRatesAPI.Repos;
-using DnsClient.Internal;
 using Microsoft.Extensions.Logging;
 
 var host = new HostBuilder()
@@ -15,8 +14,14 @@ var host = new HostBuilder()
         services.ConfigureFunctionsApplicationInsights();
 		services.AddHttpClient<GeocodingService>();
 		services.AddSingleton(sp => new LocationsRepository(sp.GetRequiredService<IConfiguration>()));
+		services.AddSingleton(sp => new RateChangeRepository(
+			sp.GetRequiredService<ILogger<RateChangeRepository>>(), 
+			sp.GetRequiredService<IConfiguration>()
+		));
 		services.AddSingleton(sp => new GeocodingService(sp.GetRequiredService<HttpClient>(), "AIzaSyAVNxM9pV4iKF2LowPGKfi8GGg4X0E11i8"));
+		services.AddSingleton(sp => new ExchangeServices(sp.GetRequiredService<HttpClient>(), "AIzaSyAVNxM9pV4iKF2LowPGKfi8GGg4X0E11i8"));
 		services.AddSingleton<LocationFacade>();
+		services.AddSingleton<RateChangeFacade>();
 		// services.AddSingleton(sp => new LocationFacade(
 		// 	sp.GetRequiredService<ILoggerFactory>(),
 		// 	sp.GetRequiredService<LocationsRepository>(), 

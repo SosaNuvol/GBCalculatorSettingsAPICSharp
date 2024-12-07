@@ -1,7 +1,7 @@
+namespace GBCalculatorRatesAPI.Models;
+
 using System.Text.Json;
 using Newtonsoft.Json;
-
-namespace GBCalculatorRatesAPI.Models;
 
 public interface IGBGeoCodes {
 	double Latitude { get; }

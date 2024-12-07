@@ -1,8 +1,6 @@
 namespace GBCalculatorRatesAPI.Services;
 
 using System.Text.Json;
-using System.Text.Json.Nodes;
-using DocumentFormat.OpenXml.Presentation;
 using GBCalculatorRatesAPI.Models;
 
 public class GeocodingService

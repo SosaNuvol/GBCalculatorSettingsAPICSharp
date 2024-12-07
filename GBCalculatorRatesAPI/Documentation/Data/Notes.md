@@ -102,3 +102,44 @@ db.locations.updateMany(
 ```
 
 This worked with a match of 1965 of 2033.  Leaving 68 that were not modified.
+
+### Steps To Configuring the Cluster MongoDB on Azure
+
+1. I connected to it first.  Make sure you replace the password.
+2. I have to create a new property called `location` for all documents that have a longitude and latitude coordinate.
+
+   This is a `Point` type that contains an array of `double` types.
+
+   Below is the command:
+
+  The assumption here is that the data has already been loaded from the googlesheets.
+
+  ```mongodb
+  db.locations.aggregate([
+      {
+          $addFields: {
+              location: {
+                  type: "Point",
+                  coordinates: ["$longitude", "$latitude"]
+              }
+          }
+      },
+      {
+          $merge: {
+              into: "locations",
+              whenMatched: "merge",
+              whenNotMatched: "fail"
+          }
+      }
+  ]);
+  ```
+
+1. Create the index that will help with the query.  Below is the command:
+
+Make sure that you create the `location` property in the documents first.
+
+```mongodb
+db.locations.createIndex({ location: "2dsphere" });
+```
+
+This creates an index called `location_2dsphere`.

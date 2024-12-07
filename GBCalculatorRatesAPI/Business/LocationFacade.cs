@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using ClosedXML.Excel;
 using DnsClient.Internal;
-using DocumentFormat.OpenXml.Drawing.Charts;
 using GBCalculatorRatesAPI.Business.Models;
 using GBCalculatorRatesAPI.Models;
 using GBCalculatorRatesAPI.Repos;

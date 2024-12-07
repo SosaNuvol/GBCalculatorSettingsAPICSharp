@@ -14,11 +14,13 @@ public class GeocodeFunction
 {
     private readonly ILogger _logger;
 	private readonly LocationFacade _locationFacade;
+	private readonly RateChangeFacade _rateChangeFacade;
 
-    public GeocodeFunction(ILoggerFactory loggerFactory, LocationFacade locationFacade)
+    public GeocodeFunction(ILoggerFactory loggerFactory, LocationFacade locationFacade, RateChangeFacade rateChangeFacade)
     {
         _logger = loggerFactory.CreateLogger<GeocodeFunction>();
 		_locationFacade = locationFacade;
+		_rateChangeFacade = rateChangeFacade;
     }
 
     [Function("GeocodeFunction")]
@@ -39,6 +41,34 @@ public class GeocodeFunction
 				return req.CreateResponse(HttpStatusCode.BadRequest);
 		}
 
+    }
+
+    [Function("ChangeRates")]
+    public async Task<HttpResponseData> ChangeRates(
+        [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
+    {
+        _logger.LogInformation("|| ** Processing change rates request.");
+
+        var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        var changeRatesRequest = JsonConvert.DeserializeObject<RateChangeRequest>(requestBody);
+
+        if (changeRatesRequest == null)
+        {
+            return req.CreateResponse(HttpStatusCode.BadRequest);
+        }
+
+        var response = req.CreateResponse(HttpStatusCode.Created);
+
+		var actionResponse = await _rateChangeFacade.SaveChange(changeRatesRequest);
+		if (actionResponse.Code != QUAD.DSM.DSMEnvelopeCodeEnum.GEN_COMMON_00000) {
+			response.StatusCode = HttpStatusCode.BadRequest;
+			await response.WriteStringAsync(actionResponse.ErrorMessage ?? "An Error occurred.");
+		} else {
+			response.StatusCode = HttpStatusCode.Created;
+	        await response.WriteAsJsonAsync(actionResponse.Payload);
+		}
+
+        return response;
     }
 
 	private async Task<HttpResponseData?> HandlePostFindLocations(HttpRequestData req)
