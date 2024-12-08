@@ -32,6 +32,7 @@ public class CacheFacade<T>
 			var payloadResult = await GetLatestPayload(responseData);
 
 			if (payloadResult == null || payloadResult.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"|| ** When in facade there was no payload for \"{Utilities.Tools.GetCacheType<T>()}\"");
+			if (payloadResult.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "The 'Payload' of payloadResult in GetCacheItem is null");
 
 			response.Success(payloadResult.Payload.Payload);
 
@@ -47,13 +48,17 @@ public class CacheFacade<T>
 		var response = DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>.Initialize(_logger);
 
 		try {
-			if(responseData.Payload.ExpiresAt >= DateTimeOffset.Now) return response.Success(responseData.Payload);
+			if (responseData == null) throw new Exception($"Response data can't be null. Fatal error");
+			if(responseData.Payload != null && responseData.Payload.ExpiresAt >= DateTimeOffset.Now) return response.Success(responseData.Payload);
 
 			var exchangeResponse = await _exchangeServices.GetExchangeRates();
 			if (exchangeResponse.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) return response.Rebase(exchangeResponse);
 
+			if (exchangeResponse.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "Exchange response payload is null.");
 			var exchangeDbResponse = await _cacheRepository.UpdateCache((T)(object)exchangeResponse.Payload);
 			if (exchangeDbResponse.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) return response.Rebase(exchangeDbResponse);
+
+			if (exchangeDbResponse.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "Payload is null.");
 
 			response.Success(exchangeDbResponse.Payload);
 

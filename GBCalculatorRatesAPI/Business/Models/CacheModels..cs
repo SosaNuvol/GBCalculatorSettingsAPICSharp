@@ -1,8 +1,8 @@
-using Newtonsoft.Json;
+// using Newtonsoft.Json;
 
-namespace GBCalculatorRatesAPI.Business.Models;
+// namespace GBCalculatorRatesAPI.Business.Models;
 
-public class CurrencyExchangeCacheModel {
-	[JsonProperty("id")]
-	public string Id { get; set; }
-}
+// public class CurrencyExchangeCacheModel {
+// 	[JsonProperty("id")]
+// 	public string Id { get; set; }
+// }

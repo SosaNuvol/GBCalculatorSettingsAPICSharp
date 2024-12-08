@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using GBCalculatorRatesAPI.Business;
 using GBCalculatorRatesAPI.Repos;
 using Microsoft.Extensions.Logging;
+using GBCalculatorRatesAPI.Models;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
@@ -30,11 +31,18 @@ var host = new HostBuilder()
 		));
 		services.AddSingleton<LocationFacade>();
 		services.AddSingleton<RateChangeFacade>();
-		// services.AddSingleton(sp => new LocationFacade(
-		// 	sp.GetRequiredService<ILoggerFactory>(),
-		// 	sp.GetRequiredService<LocationsRepository>(), 
-		// 	sp.GetRequiredService<GeocodingService>()
-		// ));
+
+        // Register CacheRepository and CacheFacade for ExchangeRateModel
+        services.AddSingleton(sp => new CacheRepository<ExchangeRateModel>(
+            sp.GetRequiredService<ILogger<CacheRepository<ExchangeRateModel>>>(),
+            sp.GetRequiredService<IConfiguration>()
+        ));
+		services.AddSingleton(sp => new CacheFacade<ExchangeRateModel>(
+			sp.GetRequiredService<ILogger<CacheFacade<ExchangeRateModel>>>(),
+			sp.GetRequiredService<CacheRepository<ExchangeRateModel>>(),
+			sp.GetRequiredService<ExchangeServices>()
+		));
+		
 		services.AddLogging(loggingBuilder => {
             loggingBuilder.AddConsole();
             loggingBuilder.AddApplicationInsights();
