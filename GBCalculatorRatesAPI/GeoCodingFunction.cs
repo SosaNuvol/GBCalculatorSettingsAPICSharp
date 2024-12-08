@@ -1,7 +1,5 @@
 using GBCalculatorRatesAPI.Business;
 using GBCalculatorRatesAPI.Models;
-using GBCalculatorRatesAPI.Repos;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;

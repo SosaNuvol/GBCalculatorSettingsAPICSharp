@@ -61,6 +61,26 @@ public class DSMEnvelop<T,L>(DSMEnvelopeCodeEnum code, string? statusCode, Syste
 		return this;
 	}
 
+	public DSMEnvelop<T,L> Error(Exception ex, DSMEnvelopeCodeEnum code, string message) {
+		Code = code;
+		HttpStatus = System.Net.HttpStatusCode.BadRequest;
+
+		Console.WriteLine($"|| ** Exception Error was thrown and captured in DSM: {ex.Message}");
+		Console.WriteLine($"|| ** With additional message: {message}");
+
+		ErrorMessage = ex.Message;
+
+		return this;
+	}
+
+	public DSMEnvelop<T,L> Warning(DSMEnvelopeCodeEnum code, string notes) {
+		Code = code;
+
+		Notes = notes;
+
+		return this;
+	}
+
 	public DSMEnvelop<T,L> Rebase (IDSMEnvelop parent) {
 		Code = parent.Code;
 		ErrorMessage = parent.ErrorMessage;

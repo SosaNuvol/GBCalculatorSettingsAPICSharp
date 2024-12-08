@@ -17,10 +17,13 @@ public enum DSMEnvelopeCodeEnum
 	API_DATABASE_03020 = 03020,
 
 	// Facade
-	API_FACADE_04000 = 04000,  // General error for facacdes
+	API_FACADE_04000 = 04000,
+	API_FACADE_04010 = 04010,  // General error for facacdes
+
 
 	// Repo
-	API_REPOS_05000 = 05000,  // General error for repos
+	API_REPOS_05001 = 05001,  // General error for repos
+	API_REPOS_05010 = 05010,  // Item not found
 
 	// Services
 	API_SERVICES_06001 = 06001, // General error for services

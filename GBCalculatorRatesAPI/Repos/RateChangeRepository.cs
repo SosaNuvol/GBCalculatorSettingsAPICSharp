@@ -37,7 +37,7 @@ public class RateChangeRepository {
 			response.Success(document);
 		} catch (Exception ex) {
 			_logger.LogError($"|| ** Error occurred when trying to create a rateChange: {ex.Message}");
-			response.Error(DSMEnvelopeCodeEnum.API_REPOS_05000, $"Error: {ex.Message}");
+			response.Error(DSMEnvelopeCodeEnum.API_REPOS_05001, $"Error: {ex.Message}");
 		}
 
 		return response;

@@ -38,9 +38,10 @@ public class RateChangeFacade
 			var rateChangeDbEntity = await _rateChangeRepository.CreateAsync(rateChangeEntity);
 			if (rateChangeDbEntity.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) response.Rebase(rateChangeDbEntity);
 
+			// TODO.  Refactor this to get latest Exchange Rates.
 			var exchangeRates = await _exchangeServices.GetExchangeRates();
 			if (exchangeRates.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) return response.Rebase(exchangeRates);
-			if (exchangeRates.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04000, "No values were return from th exchange.");
+			if (exchangeRates.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "No values were return from th exchange.");
 
 			var responsePayload = CreateResponse(newRate, exchangeRates.Payload);
 			response.Success(responsePayload.Payload);
@@ -57,10 +58,10 @@ public class RateChangeFacade
 
 		try {
 			var currenciesListString = _configuration["CURRENCY_LIST"];
-			if (string.IsNullOrEmpty(currenciesListString)) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04000, "Missing Currencies list");
+			if (string.IsNullOrEmpty(currenciesListString)) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "Missing Currencies list");
 
 			var acceptedListOfCurrencies = Newtonsoft.Json.JsonConvert.DeserializeObject<List<NameKeyModel>>(currenciesListString);
-			if (acceptedListOfCurrencies == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04000, "No list of currencies is available");
+			if (acceptedListOfCurrencies == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "No list of currencies is available");
 
 			var acceptedKeys = acceptedListOfCurrencies.Select(c => c.Key).ToHashSet();
 			var filteredQuotes = exchangeRates.Quotes
