@@ -11,6 +11,7 @@ using GBCalculatorRatesAPI.Services;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using QUAD.DSM;
 
 public class LocationFacade
 {
@@ -66,12 +67,93 @@ public class LocationFacade
 		return null;
 	}
 
+	public async Task<List<LocationDbEntity>> GetLocationsWithCityDataAsync(string cityData)
+	{
+		var coordinates = await _geocodingServices.GeocodeAsync(cityData);
+		var response = await GetLocationsWithinRadiusAsync(coordinates.Latitude, coordinates.Longitude, 30000);
+
+		return response ?? [];
+	}
+
+	public async Task<DSMEnvelop<List<LocationDbEntity>,LocationFacade>> GetLocationsWithCityDataAsyncV2(string cityData)
+	{
+		var response = DSMEnvelop<List<LocationDbEntity>,LocationFacade>.Initialize(_logger);
+
+		try {
+			var coordinates = await _geocodingServices.GeocodeAsync(cityData);
+			var responsData = await GetLocationsWithinRadiusAsync(coordinates.Latitude, coordinates.Longitude, 30000);
+			
+			// return responseData ?? [];
+
+		} catch (Exception ex) {
+			response.Error(ex);
+		}
+
+		return response;
+	}
+
+
 	public async Task<List<LocationDbEntity>> GetLocationsWithZipCodesAsync(string zipCodes)
 	{
 		var zipCodeList = zipCodes.Split(',').Select(z => z.Trim()).ToList();
 		var filter = Builders<LocationDbEntity>.Filter.In(l => l.GeoZipCode, zipCodeList);
 
 		return await _locationsRepository.FindAsync(filter);
+	}
+
+	public async Task<DSMEnvelop<GeoCodeResponse, LocationFacade>> GetLocationsWithCityDataV2Async(string cityData)
+	{
+		var response = DSMEnvelop<GeoCodeResponse, LocationFacade>.Initialize(_logger);
+
+		try {
+			var coordinates = await GetCenterPointFromCityName(cityData);
+			if (coordinates == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"Can't find coordinates for \"{cityData}\"");
+			if (coordinates.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) return response.Rebase(coordinates);
+			if (coordinates.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"Missing payload for \"{cityData}\"");
+
+			var responsePayload = await GetLocationsWithinRadiusAsync(coordinates.Payload.Latitude, coordinates.Payload.Longitude, 30000);
+			if (responsePayload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"Null resposne from \"GetLocationsWithinRadiusAsync\".");
+
+			var geoCodeResponse = new GeoCodeResponse
+			{
+				TotalCount = responsePayload.Count,
+				Payload = responsePayload,
+				Longitude = coordinates.Payload.Longitude,
+				Latitude = coordinates.Payload.Latitude
+			};
+
+			response.Success(geoCodeResponse);
+
+		} catch(Exception ex) {
+			response.Error(ex);
+		}
+
+		return response;
+	}
+
+	public async Task<DSMEnvelop<GeoCodeResponse, LocationFacade>> GetLocationsWithZipCodesV2Async(string zipCodes)
+	{
+		var response = DSMEnvelop<GeoCodeResponse, LocationFacade>.Initialize(_logger);
+
+		try {
+			var locationPayload = await GetLocationsWithZipCodesAsync(zipCodes);
+
+			var zipCodeList = zipCodes.Split(',').Select(z => z.Trim()).ToList();
+			var responsePayload = await GetCenterPointFromZipCodeList(zipCodeList);
+			if (responsePayload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "When calling GetCenterPointFromZipCodeList a null is returned.");
+			if (responsePayload.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) return response.Rebase(responsePayload);
+			if (responsePayload.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "When calling GetCenterPointFromZipCodeList we get a successful code but payload is null");
+
+			responsePayload.Payload.Payload = locationPayload;
+			responsePayload.Payload.TotalCount = locationPayload.Count;
+
+			response.Success(responsePayload.Payload);
+
+		} catch (Exception ex) {
+			response.Error(ex);
+		}
+
+		return response;
 	}
  
 	public async Task<List<LocationWithCoordinates>> GeoCodeAllLocations()
@@ -126,6 +208,45 @@ public class LocationFacade
 			|| !location.GeoStatus.Equals("Update")) return false;
 
 		return true;
+	}
+
+	private async Task<DSMEnvelop<GeoCodeResponse, LocationFacade>> GetCenterPointFromZipCodeList(IList<string> zipCodeList) {
+		var response = DSMEnvelop<GeoCodeResponse, LocationFacade>.Initialize(_logger);
+
+		try {
+			var geoCodeZipList = new List<GBGeoCodes>();
+			foreach(var zipCode in zipCodeList) {
+				var geoZipCodes = await _geocodingServices.GeocodeAsync(zipCode);
+				geoCodeZipList.Add(geoZipCodes);
+			}
+
+			var geoCodeResponse = new GeoCodeResponse();
+			geoCodeResponse.GenerateCenterPoint(geoCodeZipList);
+
+			response.Success(geoCodeResponse);
+		} catch(Exception ex) {
+			response.Error(ex);
+		}
+
+		return response;
+	}
+
+	private async Task<DSMEnvelop<GeoCodeResponse, LocationFacade>> GetCenterPointFromCityName(string cityName) {
+		var response = DSMEnvelop<GeoCodeResponse, LocationFacade>.Initialize(_logger);
+
+		try {
+
+			var cityGeoCode = await _geocodingServices.GeocodeAsync(cityName);
+
+			var geoCodeResponse = new GeoCodeResponse();
+			geoCodeResponse.GenerateCenterPoint(new List<GBGeoCodes> { cityGeoCode });
+
+			response.Success(geoCodeResponse);
+		} catch (Exception ex) {
+			response.Error(ex);
+		}
+
+		return response;
 	}
 
 	public async Task<bool> DumbExcell() {

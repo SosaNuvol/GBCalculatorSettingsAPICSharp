@@ -4,10 +4,16 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using QUAD.DSM;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 
 namespace GBCalculatorRatesAPI;
 
+/// <summary>
+/// This Function does a lot of stuff.  I need to explain
+/// 
+/// </summary>
 public class GeocodeFunction
 {
     private readonly ILogger _logger;
@@ -41,6 +47,43 @@ public class GeocodeFunction
 
     }
 
+	[Function("GeocodeFunctionV2")]
+	public async Task<HttpResponseData> RunV2(
+        [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
+	{
+		_logger.LogInformation("|| ** Processing geocoding request V2.");
+		var geocodeRequest = await Utilities.Tools.GetGeoCodeRequest(req);
+
+		if (geocodeRequest == null || string.IsNullOrEmpty(geocodeRequest.ZipCodes))
+		{
+			return req.CreateResponse(HttpStatusCode.BadRequest);
+		}
+
+		try {
+
+			if (Utilities.Tools.IsCommaDelimitedNumbers(geocodeRequest.ZipCodes)) {
+				var result = await _locationFacade.GetLocationsWithZipCodesV2Async(geocodeRequest.ZipCodes);
+				return await Utilities.Tools.CreateHttpResponse(req, HttpStatusCode.OK, result);
+			}
+
+			var result2 = await _locationFacade.GetLocationsWithCityDataV2Async(geocodeRequest.ZipCodes);
+			return await Utilities.Tools.CreateHttpResponse(req, HttpStatusCode.OK, result2);
+
+		} catch(Exception ex) {
+			// Log the exception (you can use your preferred logging framework)
+			_logger.LogError(ex, "An error occurred while processing the request.");
+
+			// Create an error response
+			var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+			errorResponse.Headers.Remove("Content-Type");
+			errorResponse.Headers.Add("Content-Type", "application/json; charset=utf-8");
+			var errorJson = JsonConvert.SerializeObject(new { error = "An error occurred while processing your request." });
+			await errorResponse.WriteStringAsync(errorJson);
+
+			return errorResponse;
+		}
+	}
+	
     [Function("ChangeRates")]
     public async Task<HttpResponseData> ChangeRates(
         [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
@@ -69,10 +112,20 @@ public class GeocodeFunction
         return response;
     }
 
+	[Function("DownloadData")]
+	public async Task<HttpResponseData> DownloadData(
+        [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
+	{
+        _logger.LogInformation("|| ** Processing Download Data request.");
+
+		var response = req.CreateResponse(HttpStatusCode.Accepted);
+
+		return response;
+	}
+
 	private async Task<HttpResponseData?> HandlePostFindLocations(HttpRequestData req)
 	{
-		var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-		var geocodeRequest = JsonConvert.DeserializeObject<GeocodeRequest>(requestBody);
+		var geocodeRequest = await Utilities.Tools.GetGeoCodeRequest(req);
 
 		if (geocodeRequest == null)
 		{
@@ -88,7 +141,12 @@ public class GeocodeFunction
 				geocodeRequest.RadiusInMeters
 			);
 		} else {
-			result = await _locationFacade.GetLocationsWithZipCodesAsync(geocodeRequest.ZipCodes);
+			// TODO: I need to check if this is a list of Zipcodes or a City.
+			if (Utilities.Tools.hasCityData(geocodeRequest.ZipCodes)) {
+				result = await _locationFacade.GetLocationsWithCityDataAsync(geocodeRequest.ZipCodes);
+			} else {
+				result = await _locationFacade.GetLocationsWithZipCodesAsync(geocodeRequest.ZipCodes);
+			}
 		}
 
 		// Create response
