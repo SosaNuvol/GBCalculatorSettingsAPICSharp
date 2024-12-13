@@ -55,4 +55,34 @@ public static class Tools {
 
 		return response;
 	}
+	public struct CenterPoint {
+		public required double Longitude = 0;
+
+		public required double Latitude = 0;
+
+		public CenterPoint()
+		{
+		}
+	}
+
+	public static bool GenerateCenterPointTry(List<GBGeoCodes> pointsList, out CenterPoint value) {
+		value = new CenterPoint { Longitude = 0, Latitude = 0 };
+
+		if (pointsList == null || pointsList.Count == 0) {
+			return false;
+		}
+
+		double totalLatitude = 0;
+		double totalLongitude = 0;
+
+		foreach (var point in pointsList) {
+			totalLatitude += point.Latitude;
+			totalLongitude += point.Longitude;
+		}
+
+		value.Latitude = totalLatitude / pointsList.Count;
+		value.Longitude = totalLongitude / pointsList.Count;
+
+		return true;
+	}
 }

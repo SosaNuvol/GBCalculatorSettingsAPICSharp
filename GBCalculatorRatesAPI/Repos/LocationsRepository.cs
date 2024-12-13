@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 public class LocationsRepository
 {
 	private readonly IMongoCollection<LocationDbEntity> _locationsCollection;
+	public IMongoCollection<LocationDbEntity> LocationsCollection {
+		get { return _locationsCollection; }
+	}
 	private readonly IConfiguration _configuration;
 	private readonly string _connectionString;
 	private readonly string _dbName;

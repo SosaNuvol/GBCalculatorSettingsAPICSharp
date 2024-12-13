@@ -31,3 +31,7 @@ $\ ngrok http 7072 --domain=gbmobileappgeoapi.nuvol9.com
 ## Android SDK Location
 
 /Users/andressosa/Library/Android/sdk
+
+## Resources
+
+- Jesus: jmagamez50@gmail.com

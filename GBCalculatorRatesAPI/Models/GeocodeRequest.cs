@@ -2,6 +2,7 @@ namespace GBCalculatorRatesAPI.Models;
 
 using GBCalculatorRatesAPI.Business.Models;
 using Newtonsoft.Json;
+using static GBCalculatorRatesAPI.Utilities.Tools;
 
 public class GeoCodeRequest
 {
@@ -18,6 +19,12 @@ public class GeoCodeRequest
 	public string? ZipCodes { get; set; }
 }
 
+public class GeoCodeResponseV3: GeoCodeRequest {
+
+	[JsonProperty("queryResult")]
+	public required GeoSearchQueryResult QueryResult { get; set; }
+}
+
 public class GeoCodeResponse: GeoCodeRequest {
 	[JsonProperty("totalCount")]
 	public int TotalCount { get; set; } = 0;
@@ -26,23 +33,12 @@ public class GeoCodeResponse: GeoCodeRequest {
 	public IList<LocationDbEntity> Payload { get; set; } = new List<LocationDbEntity>();
 
 	public bool GenerateCenterPoint(List<GBGeoCodes> pointsList) {
-		if (pointsList == null || pointsList.Count == 0) {
-			return false;
-		}
+		CenterPoint centerPoint;
 
-		double totalLatitude = 0;
-		double totalLongitude = 0;
-
-		foreach (var point in pointsList) {
-			totalLatitude += point.Latitude;
-			totalLongitude += point.Longitude;
-		}
-
-		double centerLatitude = totalLatitude / pointsList.Count;
-		double centerLongitude = totalLongitude / pointsList.Count;
+		if (!Utilities.Tools.GenerateCenterPointTry(pointsList, out centerPoint)) return false;
 
 		// Assuming you have a property or method to set the center point
-		SetCenterPoint(centerLatitude, centerLongitude);
+		SetCenterPoint(centerPoint.Latitude, centerPoint.Longitude);
 
 		return true;
 	}

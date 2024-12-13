@@ -1,3 +1,5 @@
+namespace GBCalculatorRatesAPI;
+
 using GBCalculatorRatesAPI.Business;
 using GBCalculatorRatesAPI.Models;
 using Microsoft.Azure.Functions.Worker;
@@ -6,9 +8,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using QUAD.DSM;
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
-
-namespace GBCalculatorRatesAPI;
 
 /// <summary>
 /// This Function does a lot of stuff.  I need to explain
@@ -84,6 +83,15 @@ public class GeocodeFunction
 		}
 	}
 	
+	[Function("GeocodeFunctionV3")]
+	public async Task<HttpResponseData> RunV3(
+        [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
+	{
+		_logger.LogInformation("|| ** Processing geocoding request V3.");
+
+		return await HandlePostFindLocationsV3(req);
+	}
+
     [Function("ChangeRates")]
     public async Task<HttpResponseData> ChangeRates(
         [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
@@ -119,6 +127,50 @@ public class GeocodeFunction
         _logger.LogInformation("|| ** Processing Download Data request.");
 
 		var response = req.CreateResponse(HttpStatusCode.Accepted);
+
+		return response;
+	}
+
+	private async Task<HttpResponseData?> HandlePostFindLocationsV3(HttpRequestData req)
+	{
+		var geocodeRequest = await Utilities.Tools.GetGeoCodeRequest(req);
+
+		if (geocodeRequest == null)
+		{
+			return req.CreateResponse(HttpStatusCode.BadRequest);
+		}
+
+		DSMEnvelop<GeoSearchQueryResult, LocationFacade>? result;
+
+		if (string.IsNullOrEmpty(geocodeRequest.ZipCodes)) {
+			result = await _locationFacade.GetLocationsWithInRadiusV3Async(
+				geocodeRequest.Latitude,
+				geocodeRequest.Longitude,
+				geocodeRequest.RadiusInMeters
+			);
+		} else {
+			// TODO: I need to check if this is a list of Zipcodes or a City.
+			if (Utilities.Tools.hasCityData(geocodeRequest.ZipCodes)) {
+				result = await _locationFacade.GetLocationsWithCityDataV3Async(geocodeRequest.ZipCodes);
+			} else {
+				result = await _locationFacade.GetLocationsWithZipCodesV3Async(geocodeRequest.ZipCodes);
+			}
+		}
+
+		// Create response
+		if (result == null) {
+			var badResponse = req.CreateResponse(HttpStatusCode.BadGateway);
+			badResponse.Headers.Remove("Content-Type");
+			badResponse.Headers.Add("Content-Type", "application/json; charset=utf-8");
+			
+			return badResponse;
+		}
+
+		var response = req.CreateResponse(HttpStatusCode.OK);
+		response.Headers.Remove("Content-Type");
+		response.Headers.Add("Content-Type", "application/json; charset=utf-8");
+		var json = JsonConvert.SerializeObject(result);
+		await response.WriteStringAsync(json);
 
 		return response;
 	}

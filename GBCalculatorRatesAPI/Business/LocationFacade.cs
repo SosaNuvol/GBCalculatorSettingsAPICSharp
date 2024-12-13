@@ -8,6 +8,7 @@ using GBCalculatorRatesAPI.Business.Models;
 using GBCalculatorRatesAPI.Models;
 using GBCalculatorRatesAPI.Repos;
 using GBCalculatorRatesAPI.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -28,6 +29,79 @@ public class LocationFacade
 		_geocodingServices = geocodingServices;
 	}
 
+	public async Task<DSMEnvelop<GeoSearchQueryResult, LocationFacade>> GetLocationsWithInRadiusV3Async(double latitude, double longitude, double radiusInMeters)
+	{
+		var response = DSMEnvelop<GeoSearchQueryResult, LocationFacade>.Initialize(_logger);
+
+		try 
+		{
+			var collection = _locationsRepository.LocationsCollection;
+
+			var pipeline = new BsonDocument[]
+			{
+				new BsonDocument("$geoNear", new BsonDocument
+				{
+					{ "near", new BsonDocument("type", "Point").Add("coordinates", new BsonArray { longitude, latitude }) },
+					{ "key", "location" },
+					{ "distanceField", "distance" },
+					{ "maxDistance", radiusInMeters },
+					{ "spherical", true }
+				}),
+				new BsonDocument("$group", new BsonDocument
+				{
+					{ "_id", new BsonDocument { { "longitude", "$longitude" }, { "latitude", "$latitude" } } },
+					{ "count", new BsonDocument("$sum", 1) },
+					{ "documents", new BsonDocument("$push", "$$ROOT") }
+				}),
+				new BsonDocument("$project", new BsonDocument
+				{
+					{ "_id", 0 },
+					{ "longitude", "$_id.longitude" },
+					{ "latitude", "$_id.latitude" },
+					{ "count", 1 },
+					{ "documents", 1 },
+					{ "isDuplicate", new BsonDocument("$gt", new BsonArray { "$count", 1 }) }
+				}),
+				new BsonDocument("$group", new BsonDocument
+				{
+					{ "_id", BsonNull.Value },
+					{ "groupedLocations", new BsonDocument("$push", new BsonDocument("$cond", new BsonArray
+					{
+						new BsonDocument("$eq", new BsonArray { "$isDuplicate", true }),
+						new BsonDocument
+						{
+							{ "longitude", "$longitude" },
+							{ "latitude", "$latitude" },
+							{ "count", "$count" },
+							{ "documents", "$documents" }
+						},
+						new BsonString("$$REMOVE")
+					})) },
+					{ "singleLocations", new BsonDocument("$push", new BsonDocument("$cond", new BsonArray
+					{
+						new BsonDocument("$eq", new BsonArray { "$isDuplicate", false }),
+						new BsonDocument("$arrayElemAt", new BsonArray { "$documents", 0 }),
+						new BsonString("$$REMOVE")
+					})) }
+				}),
+				new BsonDocument("$project", new BsonDocument
+				{
+					{ "_id", 0 },
+					{ "groupedLocations", 1 },
+					{ "singleLocations", 1 }
+				})
+			};
+
+			var result = await collection.Aggregate<GeoSearchQueryResult>(pipeline).FirstOrDefaultAsync();
+
+			response.Success(result);
+		} catch (Exception ex) {
+			response.Error(ex);
+		}
+
+		return response;
+	}
+
 	public async Task<List<LocationDbEntity>?> GetLocationsWithinRadiusAsync(double latitude, double longitude, double radiusInMeters)
 	{
 		try {
@@ -43,19 +117,6 @@ public class LocationFacade
 					}}
 				}}
 			}}";
-
-			// Radius in radians: radius in km / Earth's radius (approx. 6378.1 km)
-			// var EarthRadius = 6378.1;
-			// double radiusInRadians = radiusInMeters / EarthRadius;
-
-			// var query2 = $@"
-			// {{
-			// 	""location"": {{
-			// 		""$geoWithin"": {{
-			// 			""$centerSphere"": [[{longitude}, {latitude}], {radiusInRadians}]
-			// 		}}
-			// 	}}
-			// }}";
 
 			var filter = new BsonDocumentFilterDefinition<LocationDbEntity>(BsonDocument.Parse(query));
 			
@@ -75,6 +136,15 @@ public class LocationFacade
 		return response ?? [];
 	}
 
+	public async Task<DSMEnvelop<GeoSearchQueryResult, LocationFacade>> GetLocationsWithCityDataV3Async(string cityData)
+	{
+		var coordinates = await _geocodingServices.GeocodeAsync(cityData);
+		var response = await GetLocationsWithInRadiusV3Async(coordinates.Latitude, coordinates.Longitude, 30000);
+
+		return response;
+	}
+
+
 	public async Task<DSMEnvelop<List<LocationDbEntity>,LocationFacade>> GetLocationsWithCityDataAsyncV2(string cityData)
 	{
 		var response = DSMEnvelop<List<LocationDbEntity>,LocationFacade>.Initialize(_logger);
@@ -92,6 +162,108 @@ public class LocationFacade
 		return response;
 	}
 
+	public async Task<DSMEnvelop<GeoSearchQueryResult, LocationFacade>> GetLocationsWithZipCodesV3Async(string zipCodes)
+	{
+		var response = DSMEnvelop<GeoSearchQueryResult, LocationFacade>.Initialize(_logger);
+
+		try {
+			// Parse the comma-delimited string into an array of zip codes
+			var zipCodeArray = zipCodes.Split(',').Select(z => z.Trim()).ToArray();
+
+			// Construct the MongoDB query
+			var pipeline = new[]
+			{
+				new BsonDocument("$match", new BsonDocument("geoZipCode", new BsonDocument("$in", new BsonArray(zipCodeArray)))),
+				new BsonDocument("$group", new BsonDocument
+				{
+					{ "_id", new BsonDocument { { "longitude", "$longitude" }, { "latitude", "$latitude" } } },
+					{ "count", new BsonDocument("$sum", 1) },
+					{ "documents", new BsonDocument("$push", "$$ROOT") }
+				}),
+				new BsonDocument("$project", new BsonDocument
+				{
+					{ "_id", 0 },
+					{ "longitude", "$_id.longitude" },
+					{ "latitude", "$_id.latitude" },
+					{ "count", 1 },
+					{ "documents", 1 },
+					{ "isDuplicate", new BsonDocument("$gt", new BsonArray { "$count", 1 }) }
+				}),
+				new BsonDocument("$group", new BsonDocument
+				{
+					{ "_id", BsonNull.Value },
+					{ "groupedLocations", new BsonDocument("$push", new BsonDocument
+						{
+							{ "$cond", new BsonArray
+								{
+									new BsonDocument("$eq", new BsonArray { "$isDuplicate", true }),
+									new BsonDocument
+									{
+										{ "longitude", "$longitude" },
+										{ "latitude", "$latitude" },
+										{ "count", "$count" },
+										{ "documents", "$documents" }
+									},
+									BsonNull.Value
+								}
+							}
+						}
+					)},
+					{ "singleLocations", new BsonDocument("$push", new BsonDocument
+						{
+							{ "$cond", new BsonArray
+								{
+									new BsonDocument("$eq", new BsonArray { "$isDuplicate", false }),
+									new BsonDocument
+									{
+										{ "longitude", "$longitude" },
+										{ "latitude", "$latitude" },
+										{ "documents", new BsonDocument("$arrayElemAt", new BsonArray { "$documents", 0 }) }
+									},
+									BsonNull.Value
+								}
+							}
+						}
+					)}
+				}),
+				new BsonDocument("$project", new BsonDocument
+				{
+					{ "_id", 0 },
+					{ "groupedLocations", 1 },
+					{ "singleLocations", new BsonDocument("$map", new BsonDocument
+						{
+							{ "input", "$singleLocations" },
+							{ "as", "single" },
+							{ "in", new BsonDocument
+								{
+									{ "businessName", "$$single.documents.businessName" },
+									{ "longitude", "$$single.longitude" },
+									{ "latitude", "$$single.latitude" },
+									{ "businessCategory", "$$single.documents.businessCategory" },
+									{ "businessPhone", "$$single.documents.businessPhone" },
+									{ "businessWebAddress", "$$single.documents.businessWebAddress" },
+									{ "businessDescription", "$$single.documents.businessDescription" },
+									{ "businessAddress", "$$single.documents.businessAddress" }
+								}
+							}
+						}
+					)}
+				})
+			};
+
+			var collection = _locationsRepository.LocationsCollection;
+			var result = await collection.Aggregate<GeoSearchQueryResult>(pipeline).FirstOrDefaultAsync();
+
+			if (result == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"These zipcode \"{zipCodes}\" failed to return any locations.");
+
+			response.Success(result);
+
+		} catch (Exception ex) {
+			response.Error(ex);
+		}
+
+		return response;
+	}
 
 	public async Task<List<LocationDbEntity>> GetLocationsWithZipCodesAsync(string zipCodes)
 	{
