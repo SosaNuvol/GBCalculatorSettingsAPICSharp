@@ -20,7 +20,7 @@ var host = new HostBuilder()
 			sp.GetRequiredService<IConfiguration>()
 		));
 		services.AddSingleton(sp => new GeocodingService(
-			sp.GetRequiredService<HttpClient>(), 
+			sp.GetRequiredService<HttpClient>(),
 			"AIzaSyAVNxM9pV4iKF2LowPGKfi8GGg4X0E11i8",
 			sp.GetRequiredService<ILogger<GeocodingService>>()
 		));

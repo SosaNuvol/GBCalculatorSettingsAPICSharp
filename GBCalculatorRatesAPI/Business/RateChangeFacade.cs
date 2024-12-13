@@ -97,4 +97,10 @@ public class RateChangeFacade
 
 		return response;
 	}
+
+	public async Task<DSMEnvelop<List<ExchangeRateModel>, RateChangeFacade>> GetAllRateChanges(bool removeFromDb = false) {
+		var response = DSMEnvelop<List<ExchangeRateModel>, RateChangeFacade>.Initialize(_logger);
+
+		return response;
+	}
 }
