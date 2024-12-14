@@ -89,7 +89,7 @@ public class GeocodeFunction
 	{
 		_logger.LogInformation("|| ** Processing geocoding request V3.");
 
-		return await HandlePostFindLocationsV3(req);
+		return await HandlePostFindLocationsV3(req) ?? req.CreateResponse(HttpStatusCode.BadRequest);
 	}
 
     [Function("ChangeRates")]
@@ -126,7 +126,7 @@ public class GeocodeFunction
 	{
         _logger.LogInformation("|| ** Processing Download Data request.");
 
-		var response = req.CreateResponse(HttpStatusCode.Accepted);
+		var response = req.CreateResponse(HttpStatusCode.EarlyHints);
 
 		return response;
 	}

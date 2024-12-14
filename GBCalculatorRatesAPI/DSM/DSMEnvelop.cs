@@ -1,21 +1,28 @@
-using Microsoft.Extensions.Logging;
-
 namespace QUAD.DSM;
 
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+
 public interface IDSMEnvelop {
+	[JsonProperty("code")]
 	public DSMEnvelopeCodeEnum Code { get; }
 
-	public string? StatusCode { get; }
 
-	public System.Net.HttpStatusCode? HttpStatus { get; }
+    [JsonProperty("statusCode")]
+    string? StatusCode { get; }
 
-	public string? ErrorMessage { get; }
+    [JsonProperty("httpStatus")]
+    System.Net.HttpStatusCode? HttpStatus { get; }
 
-	public string? Notes { get; }
-}
+    [JsonProperty("errorMessage")]
+    string? ErrorMessage { get; }
+
+    [JsonProperty("notes")]
+    string? Notes { get; }}
 
 public class DSMEnvelop<T,L>(DSMEnvelopeCodeEnum code, string? statusCode, System.Net.HttpStatusCode? httpStatus, string? errorMessage, string? notes, ILogger<L> logger) : IDSMEnvelop {
 	private readonly ILogger<L> _logger = logger;
+
 	public DSMEnvelopeCodeEnum Code { get; private set; } = code;
 
 	public string? StatusCode { get; private set; } = statusCode;
@@ -26,6 +33,7 @@ public class DSMEnvelop<T,L>(DSMEnvelopeCodeEnum code, string? statusCode, Syste
 
 	public string? Notes { get; private set; } = notes;
 
+	[JsonProperty("payload")]
 	public T? Payload { get; private set; }
 
 	public static DSMEnvelop<T,L> Initialize(ILogger<L> logger) {

@@ -8,7 +8,6 @@ using GBCalculatorRatesAPI.Business.Models;
 using GBCalculatorRatesAPI.Models;
 using GBCalculatorRatesAPI.Repos;
 using GBCalculatorRatesAPI.Services;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;

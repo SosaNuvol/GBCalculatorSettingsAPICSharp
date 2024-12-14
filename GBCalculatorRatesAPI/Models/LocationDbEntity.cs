@@ -4,6 +4,7 @@ using GBCalculatorRatesAPI.Utilities;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver.GeoJsonObjectModel;
+using Newtonsoft.Json;
 
 public interface ILocation
 {
@@ -46,82 +47,82 @@ public class LocationDbEntity: ILocation
 	[BsonElement("id")]
 	public int id { get; set; }
 
-	[BsonElement("businessName")]
+	[BsonElement("businessName"), JsonProperty("businessName")]
 	public string? BusinessName { get; set; }
 
-	[BsonElement("businessCategory")]
+	[BsonElement("businessCategory"), JsonProperty("businessCategory")]
 	public string? BusinessCategory { get; set; }
 
-	[BsonElement("businessDescription")]
+	[BsonElement("businessDescription"), JsonProperty("businessDescription")]
 	public string? BusinessDescription { get; set; }
 
-	[BsonElement("businessWebAddress")]
+	[BsonElement("businessWebAddress"), JsonProperty("businessWebAddress")]
 	public string? BusinessWebAddress { get; set; }
 
-	[BsonElement("businessPhone")]
+	[BsonElement("businessPhone"), JsonProperty("businessPhone")]
 	public string? BusinessPhone { get; set; }
 
-	[BsonElement("businessAddress")]
+	[BsonElement("businessAddress"), JsonProperty("businessAddress")]
 	public string? BusinessAddress { get; set; }
 	
-	[BsonElement("businessLogoFileUrl")]
+	[BsonElement("businessLogoFileUrl"), JsonProperty("businessLogoFileUrl")]
 	public string? BusinessLogoFileUrl { get; set; }
 
-	[BsonElement("submitedOn")]
+	[BsonElement("submitedOn"), JsonProperty("submitedOn")]
 	public string? SubmitedOn { get; set; }
 
-	[BsonElement("yourName")]
+	[BsonElement("yourName"), JsonProperty("yourName")]
 	public string? YourName { get; set; }
 
-	[BsonElement("yourPositionTitle")]
+	[BsonElement("yourPositionTitle"), JsonProperty("yourPositionTitle")]
 	public string? YourPositionTitle { get; set; }
 
-	[BsonElement("yourPhone")]
+	[BsonElement("yourPhone"), JsonProperty("yourPhone")]
 	public string? YourPhone { get; set; }
 
-	[BsonElement("yourEmail")]
+	[BsonElement("yourEmail"), JsonProperty("yourEmail")]
 	public string? YourEmail { get; set; }
 
-	[BsonElement("showOnMap")]
+	[BsonElement("showOnMap"), JsonProperty("showOnMap")]
 	[BsonSerializer(typeof(NullableBooleanStringSerializer))]
 	public bool? ShowOnMap { get; set; }
 
-	[BsonElement("howDidYouHearAboutUs")]
+	[BsonElement("howDidYouHearAboutUs"), JsonProperty("howDidYouHearAboutUs")]
 	public string? HowDidYouHearAboutUs { get; set; }
 
-	[BsonElement("source")]
+	[BsonElement("source"), JsonProperty("source")]
 	public string? Source { get; set; }
 
-	[BsonElement("latitude")]
+	[BsonElement("latitude"), JsonProperty("latitude")]
 	public double? Latitude { get; set; }
 
-	[BsonElement("longitude")]
+	[BsonElement("longitude"), JsonProperty("longitude")]
 	public double? Longitude { get; set; }
 
-	[BsonElement("geoStatus")]
+	[BsonElement("geoStatus"), JsonProperty("geoStatus")]
 	public string GeoStatus { get; set; } = "[Not Set]";
 
-	[BsonElement("geoMessage")]
+	[BsonElement("geoMessage"), JsonProperty("geoMessage")]
 	public string? GeoMessage { get; set; }
 
-	[BsonElement("geoHouseNumber")]
+	[BsonElement("geoHouseNumber"), JsonProperty("geoHouseNumber")]
 	public string? GeoHouseNumber { get; set; }
 
-    [BsonElement("geoZipCode")]
+    [BsonElement("geoZipCode"), JsonProperty("geoZipCode")]
     public string? GeoZipCode { get; set; }
 
-    [BsonElement("geoCity")]
+    [BsonElement("geoCity"), JsonProperty("geoCity")]
     public string? GeoCity { get; set; }
 
-    [BsonElement("geoStateProv")]
+    [BsonElement("geoStateProv"), JsonProperty("geoStateProv")]
     public string? GeoStateProv { get; set; }
 
-    [BsonElement("geoCounty")]
+    [BsonElement("geoCounty"), JsonProperty("geoCounty")]
     public string? GeoCounty { get; set; }
 
-    [BsonElement("geoCountry")]
+    [BsonElement("geoCountry"), JsonProperty("geoCountry")]
     public string? GeoCountry { get; set; }
 
-    [BsonElement("location")]
+    [BsonElement("location"), JsonProperty("location")]
 	public GeoJsonPoint<GeoJson2DGeographicCoordinates>? Location { get; set; }
 }
