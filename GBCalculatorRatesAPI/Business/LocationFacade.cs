@@ -228,7 +228,13 @@ public class LocationFacade
 				new BsonDocument("$project", new BsonDocument
 				{
 					{ "_id", 0 },
-					{ "groupedLocations", 1 },
+					{ "groupedLocations", new BsonDocument("$filter", new BsonDocument
+						{
+							{ "input", "$groupedLocations" },
+							{ "as", "item" },
+							{ "cond", new BsonDocument("$ne", new BsonArray { "$$item", BsonNull.Value }) }
+						}
+					)},
 					{ "singleLocations", new BsonDocument("$map", new BsonDocument
 						{
 							{ "input", "$singleLocations" },
