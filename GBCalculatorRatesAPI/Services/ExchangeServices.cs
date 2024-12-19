@@ -1,6 +1,5 @@
 namespace GBCalculatorRatesAPI.Services;
 
-using System.Text.Json;
 using GBCalculatorRatesAPI.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -10,7 +9,7 @@ public class ExchangeServices {
 	private readonly HttpClient _httpClient;
     private readonly string _apiKey;
 	private readonly ILogger<ExchangeServices> _logger;
-	private const string URI = "https://api.exchangerate.host/live?access_key=3ab01cee0923aaf526a957a3b5ba8c31&format=1";
+	private const string URI = "https://api.exchangerate.host/live?access_key={0}&format=1";
 
     public ExchangeServices(HttpClient httpClient, string apiKey, ILogger<ExchangeServices> logger)
     {
@@ -24,7 +23,7 @@ public class ExchangeServices {
 		var response = DSMEnvelop<ExchangeRateModel,ExchangeServices>.Initialize(_logger);
 
 		try {
-			var responseAction = await _httpClient.GetAsync(URI);
+			var responseAction = await _httpClient.GetAsync(URI.Replace("{0}", _apiKey));
 			responseAction.EnsureSuccessStatusCode();
 
 			var content = await responseAction.Content.ReadAsStringAsync();

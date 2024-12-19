@@ -6,13 +6,23 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using GBCalculatorRatesAPI.Services;
 using GBCalculatorRatesAPI.Models;
+using System.Net;
+using Newtonsoft.Json;
+using Microsoft.Azure.Functions.Worker.Http;
+using GBCalculatorRatesAPI.Business;
 
 public class CurrencyRates
 {
 	private readonly ILogger<CurrencyRates> _logger;
 
-	public CurrencyRates(ILogger<CurrencyRates> logger)
+	private readonly UPMAServices _upmaService;
+
+	private readonly RateChangeFacade _rateChangeFacade;
+
+	public CurrencyRates(UPMAServices uPMAServices, RateChangeFacade rateChangeFacade, ILogger<CurrencyRates> logger)
 	{
+		_upmaService = uPMAServices;
+		_rateChangeFacade = rateChangeFacade;
 		_logger = logger;
 	}
 
@@ -21,11 +31,36 @@ public class CurrencyRates
 	{
 		_logger.LogInformation("C# HTTP trigger function processed a request.");
 
-		var client = new HttpClient();
-		var services = new UPMAServices(client);
-
-		var payload = await services.GetRatesAsync<UPMAPayload>();
+		var payload = await _upmaService.GetRatesOldAsync<UPMAPayload>();
 
 		return new OkObjectResult(payload);
 	}
+
+    [Function("ChangeRates")]
+    public async Task<HttpResponseData> ChangeRates(
+        [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
+    {
+        _logger.LogInformation("|| ** Processing change rates request.");
+
+        var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        var changeRatesRequest = JsonConvert.DeserializeObject<RateChangeRequest>(requestBody);
+
+        if (changeRatesRequest == null)
+        {
+            return req.CreateResponse(HttpStatusCode.BadRequest);
+        }
+
+        var response = req.CreateResponse(HttpStatusCode.Created);
+
+		var actionResponse = await _rateChangeFacade.SaveChange(changeRatesRequest);
+		if (actionResponse.Code != QUAD.DSM.DSMEnvelopeCodeEnum._SUCCESS) {
+			response.StatusCode = HttpStatusCode.BadRequest;
+			await response.WriteStringAsync(actionResponse.ErrorMessage ?? "An Error occurred.");
+		} else {
+			response.StatusCode = HttpStatusCode.Created;
+	        await response.WriteAsJsonAsync(actionResponse.Payload);
+		}
+
+        return response;
+    }
 }

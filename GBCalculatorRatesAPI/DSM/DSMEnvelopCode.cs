@@ -2,7 +2,7 @@ namespace QUAD.DSM;
 
 public enum DSMEnvelopeCodeEnum
 {
-	GEN_COMMON_00000 = 0,
+	_SUCCESS = 0, // Used to be GEN_COMMON_00001
 	GEN_COMMON_00001 = 1,
 
 	// Security

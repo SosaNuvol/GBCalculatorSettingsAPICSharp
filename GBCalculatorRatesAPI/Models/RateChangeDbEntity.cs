@@ -2,6 +2,7 @@ namespace GBCalculatorRatesAPI.Models;
 
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using Newtonsoft.Json;
 
 [BsonIgnoreExtraElements]
 public class GeoLocationPoint {
@@ -30,9 +31,19 @@ public class GeoLocation : GeoLocationPoint
 
 public class RateChangeRequest
 {
+	[JsonProperty("deviceId")]
     public required string DeviceId { get; set; }
+
+	[JsonProperty("source")]
+	public required string Source { get; set; }
+
+	[JsonProperty("previousRate")]
     public decimal PreviousRate { get; set; }
+
+	[JsonProperty("currentRate")]
     public decimal CurrentRate { get; set; }
+
+	[JsonProperty("geoLocation")]
     public GeoLocation? GeoLocation { get; set; }
 }
 
@@ -45,6 +56,9 @@ public class RateChangeDbEntity : IRateChange
 
     [BsonElement("deviceId")]
     public required string DeviceId { get; set; }
+
+    [BsonElement("source")]
+    public required string Source { get; set; }
 
     [BsonElement("previousRate")]
     public required decimal PreviousRate { get; set; }

@@ -285,7 +285,7 @@ public class LocationFacade
 		try {
 			var coordinates = await GetCenterPointFromCityName(cityData);
 			if (coordinates == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"Can't find coordinates for \"{cityData}\"");
-			if (coordinates.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) return response.Rebase(coordinates);
+			if (coordinates.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(coordinates);
 			if (coordinates.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"Missing payload for \"{cityData}\"");
 
 			var responsePayload = await GetLocationsWithinRadiusAsync(coordinates.Payload.Latitude, coordinates.Payload.Longitude, 30000);
@@ -318,7 +318,7 @@ public class LocationFacade
 			var zipCodeList = zipCodes.Split(',').Select(z => z.Trim()).ToList();
 			var responsePayload = await GetCenterPointFromZipCodeList(zipCodeList);
 			if (responsePayload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "When calling GetCenterPointFromZipCodeList a null is returned.");
-			if (responsePayload.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) return response.Rebase(responsePayload);
+			if (responsePayload.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(responsePayload);
 			if (responsePayload.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "When calling GetCenterPointFromZipCodeList we get a successful code but payload is null");
 
 			responsePayload.Payload.Payload = locationPayload;

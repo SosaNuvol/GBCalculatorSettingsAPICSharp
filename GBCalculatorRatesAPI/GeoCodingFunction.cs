@@ -92,34 +92,6 @@ public class GeocodeFunction
 		return await HandlePostFindLocationsV3(req) ?? req.CreateResponse(HttpStatusCode.BadRequest);
 	}
 
-    [Function("ChangeRates")]
-    public async Task<HttpResponseData> ChangeRates(
-        [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
-    {
-        _logger.LogInformation("|| ** Processing change rates request.");
-
-        var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        var changeRatesRequest = JsonConvert.DeserializeObject<RateChangeRequest>(requestBody);
-
-        if (changeRatesRequest == null)
-        {
-            return req.CreateResponse(HttpStatusCode.BadRequest);
-        }
-
-        var response = req.CreateResponse(HttpStatusCode.Created);
-
-		var actionResponse = await _rateChangeFacade.SaveChange(changeRatesRequest);
-		if (actionResponse.Code != QUAD.DSM.DSMEnvelopeCodeEnum.GEN_COMMON_00000) {
-			response.StatusCode = HttpStatusCode.BadRequest;
-			await response.WriteStringAsync(actionResponse.ErrorMessage ?? "An Error occurred.");
-		} else {
-			response.StatusCode = HttpStatusCode.Created;
-	        await response.WriteAsJsonAsync(actionResponse.Payload);
-		}
-
-        return response;
-    }
-
 	[Function("DownloadData")]
 	public async Task<HttpResponseData> DownloadData(
         [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)

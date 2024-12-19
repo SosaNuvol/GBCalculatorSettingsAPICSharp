@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 public class GeocodingService
 {
     private readonly HttpClient _httpClient;
+	
     private readonly string _apiKey;
 
 	private readonly ILogger<GeocodingService> _logger;

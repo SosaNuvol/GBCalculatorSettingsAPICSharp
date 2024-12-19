@@ -17,6 +17,7 @@ public class Program
 		DotEnv.Load();
 
         var googleApiKey = Environment.GetEnvironmentVariable("GoogleApiKey");
+		var currencyExchnageApiKey = Environment.GetEnvironmentVariable("CURRENCY_EXCHANGE_KEY") ?? "3ab01cee0923aaf526a957a3b5ba8c31";
 
         if (string.IsNullOrEmpty(googleApiKey))
         {
@@ -39,9 +40,14 @@ public class Program
 					googleApiKey,
 					sp.GetRequiredService<ILogger<GeocodingService>>()
 				));
+				services.AddSingleton(sp => new UPMAServices(
+					sp.GetRequiredService<HttpClient>(),
+					sp.GetRequiredService<IConfiguration>(),
+					sp.GetRequiredService<ILogger<UPMAServices>>()
+				));
 				services.AddSingleton(sp => new ExchangeServices(
 					sp.GetRequiredService<HttpClient>(), 
-					googleApiKey,
+					currencyExchnageApiKey,
 					sp.GetRequiredService<ILogger<ExchangeServices>>()
 				));
 				services.AddSingleton<LocationFacade>();

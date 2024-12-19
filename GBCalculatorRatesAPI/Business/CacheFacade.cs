@@ -26,12 +26,12 @@ public class CacheFacade<T>
 
 		try {
 			var responseData = await _cacheRepository.GetLatestItem();
-			if (responseData.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000
+			if (responseData.Code != DSMEnvelopeCodeEnum._SUCCESS
 				&& responseData.Code != DSMEnvelopeCodeEnum.API_REPOS_05010) return response.Rebase(responseData);
 
 			var payloadResult = await GetLatestPayload(responseData);
 
-			if (payloadResult == null || payloadResult.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"|| ** When in facade there was no payload for \"{Utilities.Tools.GetCacheType<T>()}\"");
+			if (payloadResult == null || payloadResult.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"|| ** When in facade there was no payload for \"{Utilities.Tools.GetCacheType<T>()}\"");
 			if (payloadResult.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "The 'Payload' of payloadResult in GetCacheItem is null");
 
 			response.Success(payloadResult.Payload.Payload);
@@ -52,11 +52,11 @@ public class CacheFacade<T>
 			if(responseData.Payload != null && responseData.Payload.ExpiresAt >= DateTimeOffset.Now) return response.Success(responseData.Payload);
 
 			var exchangeResponse = await _exchangeServices.GetExchangeRates();
-			if (exchangeResponse.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) return response.Rebase(exchangeResponse);
+			if (exchangeResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(exchangeResponse);
 
 			if (exchangeResponse.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "Exchange response payload is null.");
 			var exchangeDbResponse = await _cacheRepository.UpdateCache((T)(object)exchangeResponse.Payload);
-			if (exchangeDbResponse.Code != DSMEnvelopeCodeEnum.GEN_COMMON_00000) return response.Rebase(exchangeDbResponse);
+			if (exchangeDbResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(exchangeDbResponse);
 
 			if (exchangeDbResponse.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "Payload is null.");
 

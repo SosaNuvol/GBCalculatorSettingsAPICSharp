@@ -34,16 +34,16 @@ public class DSMEnvelop<T,L>(DSMEnvelopeCodeEnum code, string? statusCode, Syste
 	public string? Notes { get; private set; } = notes;
 
 	[JsonProperty("payload")]
-	public T? Payload { get; private set; }
+	public required T Payload { get; set; }
 
 	public static DSMEnvelop<T,L> Initialize(ILogger<L> logger) {
-		var dsm = new DSMEnvelop<T,L>(DSMEnvelopeCodeEnum.GEN_COMMON_00001, null, null, null, null, logger);
+		var dsm = new DSMEnvelop<T,L>(DSMEnvelopeCodeEnum.GEN_COMMON_00001, null, null, null, null, logger) { Payload = default! };
 
 		return dsm;
 	}
 
 	public DSMEnvelop<T,L> Success(T value) {
-		Code = DSMEnvelopeCodeEnum.GEN_COMMON_00000;
+		Code = DSMEnvelopeCodeEnum._SUCCESS;
 		Payload = value;
 
 		return this;
