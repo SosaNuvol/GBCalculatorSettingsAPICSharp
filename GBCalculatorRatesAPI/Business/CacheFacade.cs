@@ -14,11 +14,14 @@ public class CacheFacade<T>
 
 	private readonly ExchangeServices _exchangeServices;
 
-    public CacheFacade(ILogger<CacheFacade<T>> logger, CacheRepository<T> cacheRepository, ExchangeServices exchangeServices)
+	private readonly UPMAServices _upmaServices;
+
+    public CacheFacade(ILogger<CacheFacade<T>> logger, CacheRepository<T> cacheRepository, ExchangeServices exchangeServices, UPMAServices upmaServices)
     {
         _logger = logger;
         _cacheRepository = cacheRepository;
 		_exchangeServices = exchangeServices;
+		_upmaServices = upmaServices;
     }
 
 	public async Task<DSMEnvelop<T, CacheFacade<T>>> GetCacheItem() {
@@ -51,6 +54,31 @@ public class CacheFacade<T>
 			if (responseData == null) throw new Exception($"Response data can't be null. Fatal error");
 			if(responseData.Payload != null && responseData.Payload.ExpiresAt >= DateTimeOffset.Now) return response.Success(responseData.Payload);
 
+			switch(typeof(T).ToString())
+			{
+				case "ExchangeRateModel":
+					return await GetLatestExchangeRates(responseData);
+
+				case "GBPricesModel":
+					return await GetLatersGBPricesModel(responseData);
+				
+				default:
+					return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"The type {typeof(T)} is not implemented yet.");
+			}
+
+		} catch (Exception ex) {
+			response.Error(ex, DSMEnvelopeCodeEnum.API_FACADE_04010, $"|| ** Exception in GetLatestPayload for \"{Utilities.Tools.GetCacheType<T>()}\" type.");
+		}
+
+		return response;
+	}
+
+	private async Task<DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>> GetLatestExchangeRates(DSMEnvelop<CacheDbEntity<T>, CacheRepository<T>> responseData)
+	{
+		var response = DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>.Initialize(_logger);
+
+		try
+		{
 			var exchangeResponse = await _exchangeServices.GetExchangeRates();
 			if (exchangeResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(exchangeResponse);
 
@@ -61,9 +89,33 @@ public class CacheFacade<T>
 			if (exchangeDbResponse.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "Payload is null.");
 
 			response.Success(exchangeDbResponse.Payload);
-
+		
 		} catch (Exception ex) {
-			response.Error(ex, DSMEnvelopeCodeEnum.API_FACADE_04010, $"|| ** Exception in GetLatestPayload for \"{Utilities.Tools.GetCacheType<T>()}\" type.");
+			response.Error(ex);
+		}
+
+		return response;
+	}
+
+	private async Task<DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>> GetLatersGBPricesModel(DSMEnvelop<CacheDbEntity<T>, CacheRepository<T>> responseData)
+	{
+		var response = DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>.Initialize(_logger);
+
+		try
+		{
+			var gbPricesResponse = await _upmaServices.GetRatesAsync();
+			if (gbPricesResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(gbPricesResponse);
+
+			if (gbPricesResponse.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "Exchange response payload is null.");
+			var gbPricesDbResponse = await _cacheRepository.UpdateCache((T)(object)gbPricesResponse.Payload);
+			if (gbPricesDbResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(gbPricesDbResponse);
+
+			if (gbPricesDbResponse.Payload == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, "Payload is null.");
+
+			response.Success(gbPricesDbResponse.Payload);
+		
+		} catch (Exception ex) {
+			response.Error(ex);
 		}
 
 		return response;

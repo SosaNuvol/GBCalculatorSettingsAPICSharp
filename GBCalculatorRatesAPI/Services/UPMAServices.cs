@@ -40,13 +40,13 @@ public class UPMAServices
 		return result;
 	}
 
-	public async Task<DSMEnvelop<UPMAPayload, UPMAServices>> GetRatesAsync()
+	public async Task<DSMEnvelop<GBPricesModel, UPMAServices>> GetRatesAsync()
 	{
-		var response = DSMEnvelop<UPMAPayload, UPMAServices>.Initialize(_logger);
+		var response = DSMEnvelop<GBPricesModel, UPMAServices>.Initialize(_logger);
 
 		try
 		{
-			var payload = await GetRatesOldAsync<UPMAPayload>();
+			var payload = await GetRatesOldAsync<GBPricesModel>();
 			response.Success(payload);
 			
 		} catch (Exception ex) {

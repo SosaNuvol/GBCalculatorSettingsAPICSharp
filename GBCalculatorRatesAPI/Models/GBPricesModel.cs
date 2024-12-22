@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 
 namespace GBCalculatorRatesAPI.Models;
-public interface IUPMAPayload
+public interface IGBPricesModel
 {
 	string GoldSpot { get; set; }
 	string GoldRate { get; set; }
@@ -15,7 +15,7 @@ public interface IUPMAPayload
 	string GoldbackBuyBack { get; set; }
 }
 
-public class UPMAPayload : IUPMAPayload {
+public class GBPricesModel : IGBPricesModel {
 
 	[JsonProperty("gold_spot")]
 	public required string GoldSpot { get; set; }

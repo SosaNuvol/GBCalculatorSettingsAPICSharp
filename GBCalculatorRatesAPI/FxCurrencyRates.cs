@@ -11,15 +11,15 @@ using Newtonsoft.Json;
 using Microsoft.Azure.Functions.Worker.Http;
 using GBCalculatorRatesAPI.Business;
 
-public class CurrencyRates
+public class FxCurrencyRates
 {
-	private readonly ILogger<CurrencyRates> _logger;
+	private readonly ILogger<FxCurrencyRates> _logger;
 
 	private readonly UPMAServices _upmaService;
 
 	private readonly RateChangeFacade _rateChangeFacade;
 
-	public CurrencyRates(UPMAServices uPMAServices, RateChangeFacade rateChangeFacade, ILogger<CurrencyRates> logger)
+	public FxCurrencyRates(UPMAServices uPMAServices, RateChangeFacade rateChangeFacade, ILogger<FxCurrencyRates> logger)
 	{
 		_upmaService = uPMAServices;
 		_rateChangeFacade = rateChangeFacade;
@@ -31,7 +31,7 @@ public class CurrencyRates
 	{
 		_logger.LogInformation("C# HTTP trigger function processed a request.");
 
-		var payload = await _upmaService.GetRatesOldAsync<UPMAPayload>();
+		var payload = await _upmaService.GetRatesOldAsync<GBPricesModel>();
 
 		return new OkObjectResult(payload);
 	}

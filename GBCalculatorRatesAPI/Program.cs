@@ -61,7 +61,8 @@ public class Program
 				services.AddSingleton(sp => new CacheFacade<ExchangeRateModel>(
 					sp.GetRequiredService<ILogger<CacheFacade<ExchangeRateModel>>>(),
 					sp.GetRequiredService<CacheRepository<ExchangeRateModel>>(),
-					sp.GetRequiredService<ExchangeServices>()
+					sp.GetRequiredService<ExchangeServices>(),
+					sp.GetRequiredService<UPMAServices>()
 				));
 				
 				services.AddLogging(loggingBuilder => {
