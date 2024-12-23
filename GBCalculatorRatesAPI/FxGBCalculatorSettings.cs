@@ -1,17 +1,22 @@
 namespace GBCalculatorRatesAPI;
 
-using Azure;
+using GBCalculatorRatesAPI.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 public class FxGBCalculatorSettings
 {
     private readonly ILogger _logger;
 
-	public FxGBCalculatorSettings(ILoggerFactory loggerFactory)
+	private readonly GoogleServices _googleServices;
+
+	public FxGBCalculatorSettings(ILoggerFactory loggerFactory, GoogleServices googleServices)
 	{
 		_logger = loggerFactory.CreateLogger<FxGBCalculatorSettings>();
+
+		_googleServices = googleServices;
 	}
 
 
@@ -34,7 +39,17 @@ public class FxGBCalculatorSettings
 
 		var response = req.CreateResponse();
 
-		return response;
+		var payloadResponse = await _googleServices.getLocations();
 
+        // Serialize the payloadResponse to JSON
+		var jsonResponse = JsonConvert.SerializeObject(payloadResponse);
+
+        // Set the content type to application/json
+        response.Headers.Add("Content-Type", "application/json");
+
+        // Write the JSON response to the response body
+        await response.WriteStringAsync(jsonResponse);
+
+		return response;
 	}
 }

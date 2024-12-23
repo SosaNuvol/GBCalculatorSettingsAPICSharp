@@ -40,6 +40,11 @@ public class Program
 					googleApiKey,
 					sp.GetRequiredService<ILogger<GeocodingService>>()
 				));
+				services.AddSingleton(sp => new GoogleServices(
+					googleApiKey,
+					sp.GetRequiredService<ILogger<GoogleServices>>(),
+					sp.GetRequiredService<IConfiguration>()
+				));
 				services.AddSingleton(sp => new UPMAServices(
 					sp.GetRequiredService<HttpClient>(),
 					sp.GetRequiredService<IConfiguration>(),

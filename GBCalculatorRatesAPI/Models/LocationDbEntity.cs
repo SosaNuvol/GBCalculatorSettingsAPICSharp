@@ -126,3 +126,30 @@ public class LocationDbEntity: ILocation
     [BsonElement("location"), JsonProperty("location")]
 	public GeoJsonPoint<GeoJson2DGeographicCoordinates>? Location { get; set; }
 }
+
+public enum DistributorColumnIndex {
+    BusinessCompanyName = 0,
+    BusinessWebAddress = 1,
+    BusinessEmailPersonalEmail = 2,
+    BusinessPhone = 3,
+    BusinessBillingAddress = 4,
+    ShippingAddress = 5
+}
+
+public enum LocationColumnIndex {
+    BusinessName = 0,
+    BusinessCategory = 1,
+    DescriptionOfBusiness = 2,
+    BusinessWebAddress = 3,
+    BusinessPhone = 4,
+    BusinessAddress = 5,
+    BusinessLogoImageFile = 6,
+    SubmittedOn = 7,
+    YourName = 8,
+    YourPositionTitle = 9,
+    YourPhone = 10,
+    YourEmail = 11,
+    IncludeBusiness = 12,
+    HowDidYouHearAboutUs = 13,
+    IfYouSelected = 14
+}
