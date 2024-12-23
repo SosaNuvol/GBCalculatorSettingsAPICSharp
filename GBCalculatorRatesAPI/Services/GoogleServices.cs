@@ -10,10 +10,6 @@ using QUAD.DSM;
 public class GoogleServices
 {
 	private const string _APPLICATION_NAME = "Goldback Calculator Mobile Application API v1";
-	private const string _DISTRIBUTOR = "Distributor";
-	private const string _MERCHANT = "Merchant";
-	private const string _BOTH = "Both";
-	private const string _DISTRIBUTOR_LIST_NAME = "Distributors";
 	private readonly string _SPREADSHEETID;
 	private readonly string _RANGE_DIST_LIST;
 	private readonly string _RANGE_MRCH_LIST;
@@ -43,9 +39,9 @@ public class GoogleServices
 		_SPREADSHEETID = _configuration["GSLOCATION_SPREADSHEET_ID"] ?? "1uc8BW6_hHW2E3Za5ZQEHv1rpnCQmNnzCS6MPNmtA9p0";
 	}
 
-	public async Task<DSMEnvelop<IList<ILocation>,GoogleServices>> getLocations()
+	public async Task<DSMEnvelop<LocationResponseModel,GoogleServices>> getLocations()
 	{
-		var response = DSMEnvelop<IList<ILocation>,GoogleServices>.Initialize(_logger);
+		var response = DSMEnvelop<LocationResponseModel,GoogleServices>.Initialize(_logger);
 
 		try
 		{
@@ -53,7 +49,7 @@ public class GoogleServices
 			if (tabsResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(tabsResponse);
 
 			var merchSheetNameList = tabsResponse.Payload
-				.Where(name => !name.Equals(_DISTRIBUTOR_LIST_NAME, StringComparison.OrdinalIgnoreCase))
+				.Where(name => !name.Equals(LocationConstants.DISTRIBUTOR_LIST_NAME, StringComparison.OrdinalIgnoreCase))
 				.ToList();
 
 			var idCounter = 0;
@@ -70,7 +66,7 @@ public class GoogleServices
 			// Merge the two lists
 			var mergedList = distListResponse.Payload.Concat(merchList).ToList();
 
-			response.Success(mergedList);
+			response.Success(new LocationResponseModel(mergedList));
 		} catch(Exception ex) {
 			response.Error(ex);
 		}
@@ -94,7 +90,7 @@ public class GoogleServices
 			{
 				if (findDistTry(row, distList, out var foundItem) && foundItem != null)
 				{
-					foundItem.BusinessCategory = _BOTH;
+					foundItem.BusinessCategory = LocationConstants.BOTH;
 					foundItem.BusinessDescription = getCellValue(row, (int)LocationColumnIndex.DescriptionOfBusiness);
 					foundItem.BusinessWebAddress = getCellValue(row, (int)LocationColumnIndex.BusinessWebAddress);
 					foundItem.BusinessPhone = getCellValue(row, (int)LocationColumnIndex.BusinessPhone);
@@ -113,7 +109,7 @@ public class GoogleServices
 					var location = new LocationDbEntity() {
 						id = idCounter,
 						BusinessName = getCellValue(row, (int)LocationColumnIndex.BusinessName),
-						BusinessCategory = _MERCHANT,
+						BusinessCategory = LocationConstants.MERCHANT,
 						BusinessDescription = getCellValue(row, (int)LocationColumnIndex.DescriptionOfBusiness),
 						BusinessWebAddress = getCellValue(row, (int)LocationColumnIndex.BusinessWebAddress),
 						BusinessPhone = getCellValue(row, (int)LocationColumnIndex.BusinessPhone),
@@ -192,7 +188,7 @@ public class GoogleServices
 				var distLocation = new LocationDbEntity();
 				distLocation.id = idCounter;
 				distLocation.BusinessName = getCellValue(row, (int)DistributorColumnIndex.BusinessCompanyName);
-				distLocation.BusinessCategory = _DISTRIBUTOR;
+				distLocation.BusinessCategory = LocationConstants.DISTRIBUTOR;
 				distLocation.BusinessDescription = string.Empty;
 				distLocation.BusinessWebAddress = getCellValue(row, (int)DistributorColumnIndex.BusinessWebAddress);
 				distLocation.BusinessPhone = getCellValue(row, (int)DistributorColumnIndex.BusinessPhone);
@@ -205,7 +201,7 @@ public class GoogleServices
 				distLocation.YourEmail = string.Empty;
 				distLocation.ShowOnMap = true;
 				distLocation.HowDidYouHearAboutUs = string.Empty;
-				distLocation.Source = _DISTRIBUTOR;			
+				distLocation.Source = LocationConstants.DISTRIBUTOR;			
 
 				listPayload.Add(distLocation);
 			}

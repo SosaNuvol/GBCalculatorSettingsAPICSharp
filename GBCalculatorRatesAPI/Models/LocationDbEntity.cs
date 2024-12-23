@@ -153,3 +153,10 @@ public enum LocationColumnIndex {
     HowDidYouHearAboutUs = 13,
     IfYouSelected = 14
 }
+
+public static class LocationConstants {
+	public const string DISTRIBUTOR = "Distributor";
+	public const string MERCHANT = "Merchant";
+	public const string BOTH = "Both";
+	public const string DISTRIBUTOR_LIST_NAME = "Distributors";
+}

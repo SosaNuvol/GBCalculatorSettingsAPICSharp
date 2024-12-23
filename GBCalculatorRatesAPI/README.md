@@ -48,3 +48,8 @@ az functionapp deployment source config-zip \
   --name GBCalculatorSettingsAPICSharp \
   --src ./bin/Release/net8.0/puglish.zip
 ```
+
+## Azure Portal Access
+
+- UID: Goldbackdev@outlook.com
+- PWD: G0ldb@ck!2024

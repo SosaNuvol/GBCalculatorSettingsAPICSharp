@@ -1,6 +1,7 @@
 namespace GBCalculatorRatesAPI;
 
 using GBCalculatorRatesAPI.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -35,7 +36,7 @@ public class FxGBCalculatorSettings
 	public async Task<HttpResponseData> MapData(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
 	{
-		_logger.LogInformation("|| ** Processing calculator settings request.");
+		_logger.LogInformation($"|| ** Processing calculator MapData {req.Method} request.");
 
 		var response = req.CreateResponse();
 
@@ -49,6 +50,17 @@ public class FxGBCalculatorSettings
 
         // Write the JSON response to the response body
         await response.WriteStringAsync(jsonResponse);
+
+		return response;
+	}
+
+	[Function("Transactions")]
+	public async Task<HttpResponseData> Transactions(
+		[HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
+	{
+		_logger.LogInformation($"|| ** Processing calculator Transactions {req.Method} request.");
+
+		var response = req.CreateResponse();
 
 		return response;
 	}
