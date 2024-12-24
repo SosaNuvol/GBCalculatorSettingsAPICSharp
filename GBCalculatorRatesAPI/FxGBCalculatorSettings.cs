@@ -1,5 +1,6 @@
 namespace GBCalculatorRatesAPI;
 
+using GBCalculatorRatesAPI.Business;
 using GBCalculatorRatesAPI.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Worker;
@@ -12,12 +13,15 @@ public class FxGBCalculatorSettings
     private readonly ILogger _logger;
 
 	private readonly GoogleServices _googleServices;
+	
+	private readonly LocationFacade _locationFacade;
 
-	public FxGBCalculatorSettings(ILoggerFactory loggerFactory, GoogleServices googleServices)
+	public FxGBCalculatorSettings(ILoggerFactory loggerFactory, GoogleServices googleServices, LocationFacade locationFacade)
 	{
 		_logger = loggerFactory.CreateLogger<FxGBCalculatorSettings>();
 
 		_googleServices = googleServices;
+		_locationFacade = locationFacade;
 	}
 
 
@@ -40,7 +44,8 @@ public class FxGBCalculatorSettings
 
 		var response = req.CreateResponse();
 
-		var payloadResponse = await _googleServices.getLocations();
+		// var payloadResponse = await _googleServices.getLocations();
+		var payloadResponse = await _locationFacade.SyncLocations();
 
         // Serialize the payloadResponse to JSON
 		var jsonResponse = JsonConvert.SerializeObject(payloadResponse);

@@ -11,6 +11,7 @@ using GBCalculatorRatesAPI.Services;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.GeoJsonObjectModel;
 using QUAD.DSM;
 
 public class LocationFacade
@@ -18,14 +19,84 @@ public class LocationFacade
 	private readonly ILogger<LocationFacade> _logger;
 	private readonly LocationsRepository _locationsRepository;
 	private readonly GeocodingService _geocodingServices;
+	private readonly GoogleServices _googleServices;
 
 	private const double radiansConstant = 6378.1; // Radius in radians: radius in km / Earth's radius (approx. 6378.1 km)
 
-	public LocationFacade(ILogger<LocationFacade> logger, LocationsRepository locationsRepository, GeocodingService geocodingServices)
+	public LocationFacade(ILogger<LocationFacade> logger, LocationsRepository locationsRepository, GeocodingService geocodingServices, GoogleServices googleServices)
 	{
 		_logger = logger;
 		_locationsRepository = locationsRepository;
 		_geocodingServices = geocodingServices;
+		_googleServices = googleServices;
+	}
+
+	public async Task<DSMEnvelop<IList<LocationDbEntity>, LocationFacade>> SyncLocations()
+	{
+		var response = DSMEnvelop<IList<LocationDbEntity>, LocationFacade>.Initialize(_logger);
+
+		try
+		{
+			var nukeResponse = await _locationsRepository.NukeCollection();
+			if (nukeResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) response.Rebase(nukeResponse);
+
+			var googleLocations = await _googleServices.getLocations();
+			if (googleLocations.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(googleLocations);
+
+			var list = new List<LocationDbEntity>();
+			foreach(var location in googleLocations.Payload.Locations)
+			{
+				if (location is LocationDbEntity dbLocation)
+				{
+					var dbLocationResponse = await SyncLocation(dbLocation);
+					if (dbLocationResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(dbLocationResponse);
+					list.Add(dbLocationResponse.Payload);
+				}
+			}
+
+			var geoCodedListResponse = await GeoCodeAllLocations();
+			if(geoCodedListResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(geoCodedListResponse);
+
+			Console.WriteLine("|| ** Creating Location Index...");
+
+			var createIndexResponse = await _locationsRepository.CreateLocationIndex();
+			if (createIndexResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(createIndexResponse);
+
+			var updateResult = await _locationsRepository.SetUpGeoLocationPropertyInAllDocuments();
+			if (updateResult.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(updateResult);
+
+			Console.WriteLine("|| ** Sync Locations Update Result");
+			Console.WriteLine($"|| **   Modified Count: {updateResult.Payload.ModifiedCount}");
+
+			response.Success(list);
+
+		} catch (Exception ex) {
+			response.Error(ex);
+		}
+
+		return response;
+	}
+
+	public async Task<DSMEnvelop<LocationDbEntity, LocationFacade>> SyncLocation(LocationDbEntity location)
+	{
+		var response = DSMEnvelop<LocationDbEntity, LocationFacade>.Initialize(_logger);
+
+		try
+		{
+			if (string.IsNullOrEmpty(location._id)) 
+			{
+				await _locationsRepository.CreateAsync(location);
+			} else {
+				await _locationsRepository.UpdateAsync(location._id, location);
+			}
+
+			response.Success(location);
+
+		} catch (Exception ex) {
+			response.Error(ex);
+		}
+
+		return response;
 	}
 
 	public async Task<DSMEnvelop<GeoSearchQueryResult, LocationFacade>> GetLocationsWithInRadiusV3Async(double latitude, double longitude, double radiusInMeters)
@@ -142,7 +213,6 @@ public class LocationFacade
 
 		return response;
 	}
-
 
 	public async Task<DSMEnvelop<List<LocationDbEntity>,LocationFacade>> GetLocationsWithCityDataAsyncV2(string cityData)
 	{
@@ -333,50 +403,66 @@ public class LocationFacade
 		return response;
 	}
  
-	public async Task<List<LocationWithCoordinates>> GeoCodeAllLocations()
+	public async Task<DSMEnvelop<GeoCodeAllLocationsResponseModel, LocationFacade>> GeoCodeAllLocations()
 	{
-		var locations = await _locationsRepository.GetAllAsync();
-		var locationsWithCoordinates = new List<LocationWithCoordinates>();
-		var ranGC = 0;
-		var notRanGC = 0;
-		var notSet = 0;
+		var response = DSMEnvelop<GeoCodeAllLocationsResponseModel, LocationFacade>.Initialize(_logger);
 
-		foreach (var location in locations)
+		try
 		{
-			if (string.IsNullOrEmpty(location.BusinessAddress) || DontRunGeoCoding(location)) {
-				notRanGC++;
-				continue;
-			}
-			ranGC++;
-			var coordinates = await _geocodingServices.GeocodeAsync(location.BusinessAddress);
-			locationsWithCoordinates.Add(new LocationWithCoordinates
+			var locations = await _locationsRepository.GetAllAsync();
+			var locationsWithCoordinates = new List<LocationWithCoordinates>();
+			var ranGC = 0;
+			var notRanGC = 0;
+			var notSet = 0;
+
+			foreach (var location in locations)
 			{
-				LocationID = location._id,
-				Address = location.BusinessAddress ?? "[No Address Present]",
-				Latitude = coordinates.Latitude,
-				Longitude = coordinates.Longitude,
-				Status = coordinates.Status ?? "[Not Set]"
+				if (string.IsNullOrEmpty(location.BusinessAddress) || DontRunGeoCoding(location)) {
+					notRanGC++;
+					continue;
+				}
+				ranGC++;
+				var coordinates = await _geocodingServices.GeocodeAsync(location.BusinessAddress);
+				locationsWithCoordinates.Add(new LocationWithCoordinates
+				{
+					LocationID = location._id,
+					Address = location.BusinessAddress ?? "[No Address Present]",
+					Latitude = coordinates.Latitude,
+					Longitude = coordinates.Longitude,
+					Status = coordinates.Status ?? "[Not Set]"
+				});
+
+				if (string.IsNullOrEmpty(coordinates.Status)) notSet++;
+
+				location.GeoStatus = coordinates.Status ?? "[Not Set]";
+				location.Latitude = coordinates.Latitude;
+				location.Longitude = coordinates.Longitude;
+				location.GeoCity = coordinates.City;
+				location.GeoZipCode = coordinates.PostalCode;
+				location.GeoStateProv = coordinates.StateProv;
+				location.GeoCounty = coordinates.County;
+				location.GeoCountry = coordinates.Country;
+				location.Location = new GeoJsonPoint<GeoJson2DGeographicCoordinates>(
+										new GeoJson2DGeographicCoordinates(coordinates.Longitude, coordinates.Latitude)
+									);
+
+				await _locationsRepository.UpdateAsync(location._id, location);
+			}
+
+			_logger.LogInformation($"|| ** Not Ran: {notRanGC}");
+			_logger.LogInformation($"|| ** Ran: {ranGC}");
+			_logger.LogInformation($"|| ** Not Set: {notSet}");
+
+			response.Success(new GeoCodeAllLocationsResponseModel {
+				NotRanGeoCode = notRanGC,
+				RanGeoCode = ranGC,
+				NotSet = notSet,
+				Locations = locationsWithCoordinates
 			});
-
-			if (string.IsNullOrEmpty(coordinates.Status)) notSet++;
-
-			location.GeoStatus = coordinates.Status ?? "[Not Set]";
-			location.Latitude = coordinates.Latitude;
-			location.Longitude = coordinates.Longitude;
-			location.GeoCity = coordinates.City;
-			location.GeoZipCode = coordinates.PostalCode;
-			location.GeoStateProv = coordinates.StateProv;
-			location.GeoCounty = coordinates.County;
-			location.GeoCountry = coordinates.Country;
-
-			await _locationsRepository.UpdateAsync(location._id, location);
+		} catch (Exception ex) {
+			response.Error(ex);
 		}
-
-		_logger.LogInformation($"|| ** Not Ran: {notRanGC}");
-		_logger.LogInformation($"|| ** Ran: {ranGC}");
-		_logger.LogInformation($"|| ** Not Set: {notSet}");
-
-		return locationsWithCoordinates;
+		return response;
 	}
 
 	private bool DontRunGeoCoding(LocationDbEntity location)

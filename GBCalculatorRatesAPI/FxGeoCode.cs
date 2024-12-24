@@ -13,15 +13,15 @@ using System.Net;
 /// This Function does a lot of stuff.  I need to explain
 /// 
 /// </summary>
-public class FxGeocode
+public class FxGeoCode
 {
     private readonly ILogger _logger;
 	private readonly LocationFacade _locationFacade;
 	private readonly RateChangeFacade _rateChangeFacade;
 
-    public FxGeocode(ILoggerFactory loggerFactory, LocationFacade locationFacade, RateChangeFacade rateChangeFacade)
+    public FxGeoCode(ILoggerFactory loggerFactory, LocationFacade locationFacade, RateChangeFacade rateChangeFacade)
     {
-        _logger = loggerFactory.CreateLogger<FxGeocode>();
+        _logger = loggerFactory.CreateLogger<FxGeoCode>();
 		_locationFacade = locationFacade;
 		_rateChangeFacade = rateChangeFacade;
     }

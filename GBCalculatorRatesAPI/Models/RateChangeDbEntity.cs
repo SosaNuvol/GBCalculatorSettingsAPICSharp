@@ -6,11 +6,17 @@ using Newtonsoft.Json;
 
 [BsonIgnoreExtraElements]
 public class GeoLocationPoint {
-	[BsonElement("longitude")]
-	double Longitude { get; set; }
+	[BsonElement("type")]
+	public required string Type { get; set; }
 
-	[BsonElement("latitude")]
-	double Latitude { get; set; }
+	[BsonElement("coordinates")]
+	public required double[] Coordinates { get; set; }
+
+	// [BsonElement("longitude")]
+	// double Longitude { get; set; }
+
+	// [BsonElement("latitude")]
+	// double Latitude { get; set; }
 }
 
 public interface IRateChange
@@ -25,8 +31,6 @@ public interface IRateChange
 
 public class GeoLocation : GeoLocationPoint
 {
-    public double Longitude { get; set; }
-    public double Latitude { get; set; }
 }
 
 public class RateChangeRequest

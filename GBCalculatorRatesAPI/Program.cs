@@ -30,9 +30,12 @@ public class Program
 				services.AddApplicationInsightsTelemetryWorkerService();
 				services.ConfigureFunctionsApplicationInsights();
 				services.AddHttpClient<GeocodingService>();
-				services.AddSingleton(sp => new LocationsRepository(sp.GetRequiredService<IConfiguration>()));
+				services.AddSingleton(sp => new LocationsRepository(
+					sp.GetRequiredService<ILogger<LocationsRepository>>(),
+					sp.GetRequiredService<IConfiguration>()
+				));
 				services.AddSingleton(sp => new RateChangeRepository(
-					sp.GetRequiredService<ILogger<RateChangeRepository>>(), 
+					sp.GetRequiredService<ILogger<RateChangeRepository>>(),
 					sp.GetRequiredService<IConfiguration>()
 				));
 				services.AddSingleton(sp => new GeocodingService(
@@ -54,6 +57,11 @@ public class Program
 					sp.GetRequiredService<HttpClient>(), 
 					currencyExchnageApiKey,
 					sp.GetRequiredService<ILogger<ExchangeServices>>()
+				));
+
+				services.AddSingleton(sp => new TransactionsFacade(
+					sp.GetRequiredService<LocationsRepository>(),
+					sp.GetRequiredService<ILogger<TransactionsFacade>>()
 				));
 				services.AddSingleton<LocationFacade>();
 				services.AddSingleton<RateChangeFacade>();
