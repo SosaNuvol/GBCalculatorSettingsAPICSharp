@@ -42,4 +42,21 @@ public class RateChangeRepository {
 
 		return response;
 	}
+
+	public async Task<DSMEnvelop<IList<RateChangeDbEntity>,RateChangeRepository>> GetAllAsync()
+	{
+		var response = DSMEnvelop<IList<RateChangeDbEntity>,RateChangeRepository>.Initialize(_logger);
+
+		try
+		{
+			var data = await _rateChangesCollection.Find(Builders<RateChangeDbEntity>.Filter.Empty).ToListAsync();
+			
+			response.Success(data);
+
+		} catch (Exception ex) {
+			response.Error(ex);
+		}
+
+		return response;
+	}
 }

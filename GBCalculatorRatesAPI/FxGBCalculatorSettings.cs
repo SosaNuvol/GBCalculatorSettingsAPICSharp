@@ -2,7 +2,6 @@ namespace GBCalculatorRatesAPI;
 
 using GBCalculatorRatesAPI.Business;
 using GBCalculatorRatesAPI.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -16,12 +15,18 @@ public class FxGBCalculatorSettings
 	
 	private readonly LocationFacade _locationFacade;
 
-	public FxGBCalculatorSettings(ILoggerFactory loggerFactory, GoogleServices googleServices, LocationFacade locationFacade)
+	private readonly TransactionsFacade _transactionsFacade;
+
+	private readonly RateChangeFacade _rateChangeFacade;
+
+	public FxGBCalculatorSettings(ILoggerFactory loggerFactory, GoogleServices googleServices, LocationFacade locationFacade, TransactionsFacade transactionsFacade, RateChangeFacade rateChangeFacade)
 	{
 		_logger = loggerFactory.CreateLogger<FxGBCalculatorSettings>();
 
 		_googleServices = googleServices;
 		_locationFacade = locationFacade;
+		_transactionsFacade = transactionsFacade;
+		_rateChangeFacade = rateChangeFacade;
 	}
 
 
@@ -67,6 +72,39 @@ public class FxGBCalculatorSettings
 
 		var response = req.CreateResponse();
 
+		var payloadResponse = await _transactionsFacade.GetAllTransactions();
+
+        // Serialize the payloadResponse to JSON
+		var jsonResponse = JsonConvert.SerializeObject(payloadResponse);
+
+        // Set the content type to application/json
+        response.Headers.Add("Content-Type", "application/json");
+
+        // Write the JSON response to the response body
+        await response.WriteStringAsync(jsonResponse);
+		
+		return response;
+	}
+
+	[Function("RateChanges")]
+	public async Task<HttpResponseData> RateChanges(
+		[HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
+	{
+		_logger.LogInformation($"|| ** Processing calculator RateChanges {req.Method} request.");
+
+		var response = req.CreateResponse();
+
+		var payloadResponse = await _rateChangeFacade.GetAllRateChanges();
+
+        // Serialize the payloadResponse to JSON
+		var jsonResponse = JsonConvert.SerializeObject(payloadResponse);
+
+        // Set the content type to application/json
+        response.Headers.Add("Content-Type", "application/json");
+
+        // Write the JSON response to the response body
+        await response.WriteStringAsync(jsonResponse);
+		
 		return response;
 	}
 }

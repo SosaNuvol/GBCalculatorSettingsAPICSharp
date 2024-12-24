@@ -1,13 +1,14 @@
 namespace GBCalculatorRatesAPI.Services;
 
 using GBCalculatorRatesAPI.Models;
+using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using QUAD.DSM;
 
-public class GoogleServices
+public partial class GoogleServices
 {
 	private const string _APPLICATION_NAME = "Goldback Calculator Mobile Application API v1";
 	private readonly string _SPREADSHEETID;
@@ -21,6 +22,8 @@ public class GoogleServices
 	private readonly IConfiguration _configuration;
 
 	private readonly SheetsService _services;
+
+	private readonly SheetsService _sheetServiceWithServiceAccount;
 
 	public GoogleServices(string apiKey, ILogger<GoogleServices> logger, IConfiguration configuration)
 	{
@@ -36,7 +39,29 @@ public class GoogleServices
 
 		_RANGE_DIST_LIST = _configuration["GSDISTRIBU_RANGE"] ?? "Distributors!A2:F";
 		_RANGE_MRCH_LIST = _configuration["GSLOCATION_RANGE"] ?? "A2:O";
+		
 		_SPREADSHEETID = _configuration["GSLOCATION_SPREADSHEET_ID"] ?? "1uc8BW6_hHW2E3Za5ZQEHv1rpnCQmNnzCS6MPNmtA9p0";
+
+		_sheetServiceWithServiceAccount = InitSheetService();
+	}
+
+	private SheetsService InitSheetService()
+	{
+		string[] Scopes = { SheetsService.Scope.Spreadsheets };
+        string ApplicationName = "Google Sheets API .NET Quickstart";
+
+        // Authenticate using the service account credentials
+        var credential = GoogleCredential.FromFile("./goldbackmobileapp-34d8ce2a8264.json")
+            .CreateScoped(Scopes);
+
+        // Create the Sheets API service
+        var service = new SheetsService(new BaseClientService.Initializer()
+        {
+            HttpClientInitializer = credential,
+            ApplicationName = ApplicationName,
+        });
+
+		return service;
 	}
 
 	public async Task<DSMEnvelop<LocationResponseModel,GoogleServices>> getLocations()

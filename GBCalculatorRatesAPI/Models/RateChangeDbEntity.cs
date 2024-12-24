@@ -58,21 +58,31 @@ public class RateChangeDbEntity : IRateChange
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = string.Empty;
 
+	[BsonElement("payloadVersion")]
+	[JsonProperty("payloadVersion")]
+	public required string PayloadVersion { get; set; }
+
     [BsonElement("deviceId")]
+	[JsonProperty("deviceId")]
     public required string DeviceId { get; set; }
 
     [BsonElement("source")]
+	[JsonProperty("source")]
     public required string Source { get; set; }
 
     [BsonElement("previousRate")]
+    [JsonProperty("previousRate")]
     public required decimal PreviousRate { get; set; }
 
     [BsonElement("currentRate")]
+    [JsonProperty("currentRate")]
     public required decimal CurrentRate { get; set; }
 
     [BsonElement("locationPoint")]
+	[JsonProperty("locationPoint")]
     public GeoLocationPoint? LocationPoint { get; set; }
 
     [BsonElement("timestamp")]
+	[JsonProperty("timestamp")]
     public required string TimeStamp { get; set; }
 }

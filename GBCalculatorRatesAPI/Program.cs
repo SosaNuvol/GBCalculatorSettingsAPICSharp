@@ -34,6 +34,10 @@ public class Program
 					sp.GetRequiredService<ILogger<LocationsRepository>>(),
 					sp.GetRequiredService<IConfiguration>()
 				));
+				services.AddSingleton(sp => new TransactionsRepository(
+					sp.GetRequiredService<ILogger<TransactionsRepository>>(),
+					sp.GetRequiredService<IConfiguration>()
+				));
 				services.AddSingleton(sp => new RateChangeRepository(
 					sp.GetRequiredService<ILogger<RateChangeRepository>>(),
 					sp.GetRequiredService<IConfiguration>()
@@ -60,7 +64,8 @@ public class Program
 				));
 
 				services.AddSingleton(sp => new TransactionsFacade(
-					sp.GetRequiredService<LocationsRepository>(),
+					sp.GetRequiredService<TransactionsRepository>(),
+					sp.GetRequiredService<GoogleServices>(),
 					sp.GetRequiredService<ILogger<TransactionsFacade>>()
 				));
 				services.AddSingleton<LocationFacade>();

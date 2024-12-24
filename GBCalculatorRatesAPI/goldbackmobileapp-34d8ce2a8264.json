@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "goldbackmobileapp",
+  "private_key_id": "34d8ce2a826463432b674fdc6474f8150557fcf4",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCtm8WjrNsNB4oZ\nv+0V5bgVzphSk/P1l2iBopxUKsei1YjNXwO9L6IsuaKgDMqcgIvMh8mIOhrEQlmg\njUHaZCSEGjHhCFSxylWPQxv+aRLKCrSMiMpUMh7iRaNv5NrRKkI9hkhId7vFOu4R\ncRpeHp+IDvbVS/s29Wq5/w2LB1S/e6BIMb/7d0e6zau3tq7LaqKRRMCJNJ4V81I7\nMfFN6Zj3xY0CONFo/9vgk+7VkkzHiWNQIXjdx2OkaSRh2spMxQFX5fK88QKwExNK\nUsM0RopDXmYj0T+KpRXr3VfHBmoPHfdaFm4Rt8a6BipPdvz4/cDsKswXoxuxSCQo\nEFG7tWSVAgMBAAECggEAE5poHea5/LB8wL1CFVERURkObHNQvqBgSGm8UulaYyx5\nxuLd27dsuGB6bgMeamnoyelinB4fgUi9W8UyNJROkUIZ9BSKPQx2o8zKn5bCweCl\nPsyADYjJTE3buhnyjArEXF500VtVGbIL9Bk8MSODv7ZyMGc6JccJdu4csTWx3/By\n/AeZAxwdETfPPJH8T0fZ/f9o+hEJFvS4YBbYf51yWe5Js5HD3xy8WGQZHCPBHpm0\nPkWZW2z7fPaxDARO5v2iZpZYLwlwmkcEZ/CtC618hiAmKB0eZwfQLWAwGcYJyb79\nx6gCxwyof/78DNnE0CrBXPngj71K/eyDknxoYH900wKBgQDq+n+mRbufJU/SD1a5\n6SkyXceNrIO7ALLsOhwlma7WAGw8RNaab5Eduwg/K25Sy7Zp8gUDvDz9TjkB90lN\nj8PDR6cZP3fgVqqbw49bnX/hejWc7gC0ggo6FL7UWDWmE353rbTHz3T0srTsGify\nYV9a2uHKU1dzGvx4EB8FzDC/SwKBgQC9I8VbMFW+qpkcmdT8YC1jMvZFq56EoXMX\nCfZbwoHUeZQIqC8/of+vwcvdCyEFc2dbrx+xgIvrSdCEStJsMqg7BG3TCWagnuWq\nx1RvFuA0pQsMcKHCmnlLqf8IqqEQdzwAEC4oqfVMu7gH+gJ6xsYE5Ckn/qMk4YUH\nZ2ZE0X2fnwKBgQDN3zk1qYTvs1YS2eOHMPQqL6Xlx48GqV8ZvvPoMZTP5EDwMPPB\nDRycasCX7+pR2i9w9V1VX3gkCoPB6DGuJdZDYqTRZx0VTXlezWDtyLlBCLyuSIwP\nmptxNbnX+4zNe+ji3Cs2oNl8hpIjBeuX3Z4Y0QrgJFLLA4rNenpjrvnKrwKBgAu5\nzv9zRK2YZ/uk8dZfpBC1VR1GoYI5fCgefv57VY81pl7PBnbcdTyRODFRAlATMoI1\nnjJj9Mi2f83j0Z3RmipmgOSHfaxRjY2D5BErCuVYohG4Xd7xsrllJaGE6o1Zxwd9\n+U6eEs4aCTO9ZS/1aMte1cpb+ANOU+/8khOMJUyjAoGAUQjwPZdOfG8qM1Lxf2v0\nKuGEIiE8ex66r4qBmKwwGN+pNuECok7PkRZcvCBY8dKJ/d/NIZy9JLq/VyKiDheI\n0m57BMX6lQZQSA0/7beuMHmMER26lkmTFQL7FLo72sIHCXOxFoVxTbm1m3EyGekV\nx1NcePa7A493krBPq6Xd3iY=\n-----END PRIVATE KEY-----\n",
+  "client_email": "goldbackmobilappserviceaccount@goldbackmobileapp.iam.gserviceaccount.com",
+  "client_id": "109340893691150785984",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/goldbackmobilappserviceaccount%40goldbackmobileapp.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

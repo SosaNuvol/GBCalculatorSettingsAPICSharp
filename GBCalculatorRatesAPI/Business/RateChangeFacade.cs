@@ -11,13 +11,15 @@ public class RateChangeFacade
 {
 	private readonly ILogger<RateChangeFacade> _logger;
 	private readonly RateChangeRepository _rateChangeRepository;
+	private readonly GoogleServices _googleServices;
 	private readonly CacheFacade<ExchangeRateModel> _cacheCurrencyRatesFacade;
 	private readonly UPMAServices _upmaServices;
 	private readonly IConfiguration _configuration;
 
-	public RateChangeFacade(ILogger<RateChangeFacade> logger, RateChangeRepository rateChangeRepository, CacheFacade<ExchangeRateModel> cacheFacade, UPMAServices upmaServices, IConfiguration configuration)
+	public RateChangeFacade(ILogger<RateChangeFacade> logger, GoogleServices googleServices, RateChangeRepository rateChangeRepository, CacheFacade<ExchangeRateModel> cacheFacade, UPMAServices upmaServices, IConfiguration configuration)
 	{
 		_logger = logger;
+		_googleServices = googleServices;
 		_rateChangeRepository = rateChangeRepository;
 		_cacheCurrencyRatesFacade = cacheFacade;
 		_upmaServices = upmaServices;
@@ -32,10 +34,11 @@ public class RateChangeFacade
 		try {
 			var rateChangeEntity = new RateChangeDbEntity {
 				DeviceId = req.DeviceId,
+				PayloadVersion = "1.0",
 				Source = req.Source,
 				PreviousRate = req.PreviousRate,
 				CurrentRate = req.CurrentRate,
-				TimeStamp = DateTimeOffset.Now.ToString(),
+				TimeStamp = DateTimeOffset.Now.ToString("o"),
 				LocationPoint = req.GeoLocation
 			};
 
@@ -164,8 +167,23 @@ public class RateChangeFacade
 		return acceptedKeys;
 	}
 
-	public async Task<DSMEnvelop<List<ExchangeRateModel>, RateChangeFacade>> GetAllRateChanges(bool removeFromDb = false) {
-		var response = DSMEnvelop<List<ExchangeRateModel>, RateChangeFacade>.Initialize(_logger);
+	public async Task<DSMEnvelop<IList<RateChangeDbEntity>,RateChangeFacade>> GetAllRateChanges(bool nuke = false)
+	{
+		var response = DSMEnvelop<IList<RateChangeDbEntity>,RateChangeFacade>.Initialize(_logger);
+
+		try
+		{
+			var payloadResponse = await _rateChangeRepository.GetAllAsync();
+			if (payloadResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(payloadResponse);
+
+			var googleSheetResponse = await _googleServices.UpdateRateChangeGoogleSheet(payloadResponse.Payload);
+			if (googleSheetResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) response.Rebase(googleSheetResponse);
+
+			response.Success(payloadResponse.Payload);
+
+		} catch(Exception ex) {
+			response.Error(ex);
+		}
 
 		return response;
 	}

@@ -54,7 +54,7 @@ public class CacheFacade<T>
 			if (responseData == null) throw new Exception($"Response data can't be null. Fatal error");
 			if(responseData.Payload != null && responseData.Payload.ExpiresAt >= DateTimeOffset.Now) return response.Success(responseData.Payload);
 
-			switch(typeof(T).ToString())
+			switch(typeof(T).Name)
 			{
 				case "ExchangeRateModel":
 					return await GetLatestExchangeRates(responseData);
