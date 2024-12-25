@@ -31,6 +31,39 @@ public interface IRateChange
 
 public class GeoLocation : GeoLocationPoint
 {
+    private double _longitude;
+    [JsonProperty("longitude")]
+    public required double Longitude 
+    { 
+        get => _longitude; 
+        set 
+        {
+            _longitude = value;
+            UpdateCoordinates();
+        }
+    }
+
+    private double _latitude;
+    [JsonProperty("latitude")]
+    public required double Latitude 
+    { 
+        get => _latitude; 
+        set 
+        {
+            _latitude = value;
+            UpdateCoordinates();
+        }
+    }
+
+    public GeoLocation()
+    {
+        UpdateCoordinates();
+    }
+
+    private void UpdateCoordinates()
+    {
+        Coordinates = new[] { Longitude, Latitude };
+    }
 }
 
 public class RateChangeRequest

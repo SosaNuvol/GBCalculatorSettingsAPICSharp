@@ -1,6 +1,5 @@
 namespace GBCalculatorRatesAPI.Services;
 
-using System.Diagnostics;
 using GBCalculatorRatesAPI.Models;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
@@ -17,7 +16,7 @@ public partial class GoogleServices
 			var values = getRateChangeList(dataList);
 			if (values.Count == 0) return response.Warning(DSMEnvelopeCodeEnum.API_SERVICES_06001, "There are no transactions to save to google sheets");
 
-			var info = getTransactionSheetInfo(values.Count);
+			var info = getRateChangeSheetInfo(values.Count);
 
 			var valueRange = new ValueRange {
 				Values = values
@@ -81,4 +80,20 @@ public partial class GoogleServices
 				return string.Empty;
 		}
 	}
+
+
+	private GoogleSheetInfo getRateChangeSheetInfo(int rowCount)
+	{
+		var range = _configuration["GSRATECHANGE_RANGE"] ?? "record_ratechanges!A2:O";
+		var spreadSheetId = _configuration["GSRATECHANGE_SPREADSHEET_ID"] ?? "19AmWPu0mbxuiCPSW8r3G4gk6rClgbnQceIAEkr-3ik4";
+
+		var response = new GoogleSheetInfo
+		{
+			Range = $"{range}{rowCount+1}",
+			SpreadSheetId = spreadSheetId
+		};
+
+		return response;
+	}
+
 }

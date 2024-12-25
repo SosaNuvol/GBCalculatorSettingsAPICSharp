@@ -39,7 +39,7 @@ public class RateChangeFacade
 				PreviousRate = req.PreviousRate,
 				CurrentRate = req.CurrentRate,
 				TimeStamp = DateTimeOffset.Now.ToString("o"),
-				LocationPoint = req.GeoLocation
+				LocationPoint = GetGeoLocationPoint(req.GeoLocation)
 			};
 
 			var rateChangeDbEntity = await _rateChangeRepository.CreateAsync(rateChangeEntity);
@@ -62,6 +62,16 @@ public class RateChangeFacade
 		}
 
 		return response;
+	}
+
+	private GeoLocationPoint? GetGeoLocationPoint(GeoLocation? geoLocation)
+	{
+		if(geoLocation == null || geoLocation.Coordinates == null) return null;
+
+		return new GeoLocationPoint {
+					Type = "Point",
+					Coordinates = geoLocation.Coordinates
+				};
 	}
 
 	private async Task<DSMEnvelop<ExchangeRateModel, RateChangeFacade>> CreateResponse(decimal newRate, string source, ExchangeRateModel exchangeRates)

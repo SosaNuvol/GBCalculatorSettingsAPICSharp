@@ -48,7 +48,12 @@ This is for Development:
 az functionapp deployment source config-zip \
   --resource-group RG-GBCalculator \
   --name GBCalculatorSettingsAPICSharp \
-  --src ./bin/Release/net8.0/puglish.zip
+  --src ./bin/Release/net8.0/publish.zip
+
+az functionapp deployment source config-zip \
+  --resource-group GoldbackMobileApp \
+  --name GBCalculatorSettingsAPICSharpProd \
+  --src ./bin/Release/net8.0/publish.zip
 ```
 
 ## Azure Portal Access
