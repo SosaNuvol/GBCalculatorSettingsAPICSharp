@@ -16,12 +16,15 @@ public class CacheFacade<T>
 
 	private readonly UPMAServices _upmaServices;
 
-    public CacheFacade(ILogger<CacheFacade<T>> logger, CacheRepository<T> cacheRepository, ExchangeServices exchangeServices, UPMAServices upmaServices)
+	private readonly GoogleServices _googleServices;
+
+    public CacheFacade(ILogger<CacheFacade<T>> logger, CacheRepository<T> cacheRepository, ExchangeServices exchangeServices, UPMAServices upmaServices, GoogleServices googleServices)
     {
         _logger = logger;
         _cacheRepository = cacheRepository;
 		_exchangeServices = exchangeServices;
 		_upmaServices = upmaServices;
+		_googleServices = googleServices;
     }
 
 	public async Task<DSMEnvelop<T, CacheFacade<T>>> GetCacheItem() {
@@ -60,7 +63,10 @@ public class CacheFacade<T>
 					return await GetLatestExchangeRates(responseData);
 
 				case "GBPricesModel":
-					return await GetLatersGBPricesModel(responseData);
+					return await GetLatestGBPricesModel(responseData);
+
+				case "AppSettingsModel":
+					return await GetLatestAppSettingsModel(responseData);
 				
 				default:
 					return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"The type {typeof(T)} is not implemented yet.");
@@ -97,7 +103,7 @@ public class CacheFacade<T>
 		return response;
 	}
 
-	private async Task<DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>> GetLatersGBPricesModel(DSMEnvelop<CacheDbEntity<T>, CacheRepository<T>> responseData)
+	private async Task<DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>> GetLatestGBPricesModel(DSMEnvelop<CacheDbEntity<T>, CacheRepository<T>> responseData)
 	{
 		var response = DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>.Initialize(_logger);
 
@@ -118,6 +124,46 @@ public class CacheFacade<T>
 			response.Error(ex);
 		}
 
+		return response;
+	}
+
+	private async Task<DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>> GetLatestAppSettingsModel(DSMEnvelop<CacheDbEntity<T>, CacheRepository<T>> responseData)
+	{
+		var response = DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>.Initialize(_logger);
+
+		try
+		{
+			var appSettingsGoogleResponse = await _googleServices.GetAppSettingsFromGoogleSheet();
+			if (appSettingsGoogleResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(appSettingsGoogleResponse);
+
+			var appSettingsDbResponse = await _cacheRepository.UpdateCache((T)(object)appSettingsGoogleResponse.Payload);
+			if (appSettingsDbResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(appSettingsDbResponse);
+
+			response.Success(appSettingsDbResponse.Payload);
+		
+		} catch (Exception ex) {
+			response.Error(ex);
+		}
+
+		return response;
+	}
+
+	public async Task<DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>> UpdateCacheItem(T responseData)
+	{
+		var response = DSMEnvelop<CacheDbEntity<T>, CacheFacade<T>>.Initialize(_logger);
+
+		try
+		{
+			if (responseData == null) return response.Error(DSMEnvelopeCodeEnum.API_FACADE_04010, $"The passed responseData of T type \"{typeof(T).ToString()}\" is null.");
+
+			var appSettingsDbResponse = await _cacheRepository.UpdateCache((T)(object)responseData);
+			if (appSettingsDbResponse.Code != DSMEnvelopeCodeEnum._SUCCESS) return response.Rebase(appSettingsDbResponse);
+
+			response.Success(appSettingsDbResponse.Payload);
+		} catch (Exception ex) {
+			response.Error(ex);
+		}
+		
 		return response;
 	}
 }

@@ -1,11 +1,11 @@
 namespace GBCalculatorRatesAPI;
 
 using GBCalculatorRatesAPI.Business;
+using GBCalculatorRatesAPI.Models;
 using GBCalculatorRatesAPI.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
 using Newtonsoft.Json;
 
 public class FxGBCalculatorSettings
@@ -20,9 +20,9 @@ public class FxGBCalculatorSettings
 
 	private readonly RateChangeFacade _rateChangeFacade;
 
-	private readonly SettingsFacade _settingsFacade;
+	private readonly CacheFacade<AppSettingsModel> _appSettingsCacheFacade;
 
-	public FxGBCalculatorSettings(ILoggerFactory loggerFactory, GoogleServices googleServices, LocationFacade locationFacade, TransactionsFacade transactionsFacade, RateChangeFacade rateChangeFacade, SettingsFacade settingsFacade)
+	public FxGBCalculatorSettings(ILoggerFactory loggerFactory, GoogleServices googleServices, LocationFacade locationFacade, TransactionsFacade transactionsFacade, RateChangeFacade rateChangeFacade, CacheFacade<AppSettingsModel> appSettingsCacheFacade)
 	{
 		_logger = loggerFactory.CreateLogger<FxGBCalculatorSettings>();
 
@@ -30,7 +30,7 @@ public class FxGBCalculatorSettings
 		_locationFacade = locationFacade;
 		_transactionsFacade = transactionsFacade;
 		_rateChangeFacade = rateChangeFacade;
-		_settingsFacade = settingsFacade;
+		_appSettingsCacheFacade = appSettingsCacheFacade;
 	}
 
 
@@ -42,7 +42,7 @@ public class FxGBCalculatorSettings
 
 		var response = req.CreateResponse();
 
-		var payloadResponse = await _settingsFacade.GetAppSettings();
+		var payloadResponse = await _appSettingsCacheFacade.GetCacheItem();
 
 		// Serialize the payloadResponse to JSON
 		var jsonResponse = JsonConvert.SerializeObject(payloadResponse);
