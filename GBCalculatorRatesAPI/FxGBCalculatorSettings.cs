@@ -5,6 +5,7 @@ using GBCalculatorRatesAPI.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 using Newtonsoft.Json;
 
 public class FxGBCalculatorSettings
@@ -19,7 +20,9 @@ public class FxGBCalculatorSettings
 
 	private readonly RateChangeFacade _rateChangeFacade;
 
-	public FxGBCalculatorSettings(ILoggerFactory loggerFactory, GoogleServices googleServices, LocationFacade locationFacade, TransactionsFacade transactionsFacade, RateChangeFacade rateChangeFacade)
+	private readonly SettingsFacade _settingsFacade;
+
+	public FxGBCalculatorSettings(ILoggerFactory loggerFactory, GoogleServices googleServices, LocationFacade locationFacade, TransactionsFacade transactionsFacade, RateChangeFacade rateChangeFacade, SettingsFacade settingsFacade)
 	{
 		_logger = loggerFactory.CreateLogger<FxGBCalculatorSettings>();
 
@@ -27,16 +30,28 @@ public class FxGBCalculatorSettings
 		_locationFacade = locationFacade;
 		_transactionsFacade = transactionsFacade;
 		_rateChangeFacade = rateChangeFacade;
+		_settingsFacade = settingsFacade;
 	}
 
 
     [Function("CalculatorSettings")]
-    public async Task<HttpResponseData> Run(
+    public async Task<HttpResponseData> CalculatorSettings(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
     {
 		_logger.LogInformation("|| ** Processing calculator settings request.");
 
 		var response = req.CreateResponse();
+
+		var payloadResponse = await _settingsFacade.GetAppSettings();
+
+		// Serialize the payloadResponse to JSON
+		var jsonResponse = JsonConvert.SerializeObject(payloadResponse);
+
+		// Set the content type to application/json
+		response.Headers.Add("Content-Type", "application/json");
+
+		// Write the JSON response to the response body
+		await response.WriteStringAsync(jsonResponse);
 
 		return response;
 	}
@@ -52,14 +67,14 @@ public class FxGBCalculatorSettings
 		// var payloadResponse = await _googleServices.getLocations();
 		var payloadResponse = await _locationFacade.SyncLocations();
 
-        // Serialize the payloadResponse to JSON
+		// Serialize the payloadResponse to JSON
 		var jsonResponse = JsonConvert.SerializeObject(payloadResponse);
 
-        // Set the content type to application/json
-        response.Headers.Add("Content-Type", "application/json");
+		// Set the content type to application/json
+		response.Headers.Add("Content-Type", "application/json");
 
-        // Write the JSON response to the response body
-        await response.WriteStringAsync(jsonResponse);
+		// Write the JSON response to the response body
+		await response.WriteStringAsync(jsonResponse);
 
 		return response;
 	}

@@ -13,17 +13,4 @@ public class DownloadDataFacade
 	{
 		_logger = logger;
 	}
-
-	public async Task<DSMEnvelop<IList<RateChangeDbEntity>, DownloadDataFacade>> RateChanges(RequestRateChange request) {
-		var response = DSMEnvelop<IList<RateChangeDbEntity>, DownloadDataFacade>.Initialize(_logger);
-
-		try
-		{
-
-		} catch (Exception ex) {
-			response.Error(ex);
-		}
-
-		return response;
-	}
 }

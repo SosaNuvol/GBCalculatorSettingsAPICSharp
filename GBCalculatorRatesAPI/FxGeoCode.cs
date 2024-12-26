@@ -91,18 +91,6 @@ public class FxGeoCode
 
 		return await HandlePostFindLocationsV3(req) ?? req.CreateResponse(HttpStatusCode.BadRequest);
 	}
-
-	[Function("DownloadData")]
-	public async Task<HttpResponseData> DownloadData(
-        [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
-	{
-        _logger.LogInformation("|| ** Processing Download Data request.");
-
-		var response = req.CreateResponse(HttpStatusCode.EarlyHints);
-
-		return response;
-	}
-
 	private async Task<HttpResponseData?> HandlePostFindLocationsV3(HttpRequestData req)
 	{
 		var geocodeRequest = await Utilities.Tools.GetGeoCodeRequest(req);

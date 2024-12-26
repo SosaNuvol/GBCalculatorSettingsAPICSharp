@@ -257,20 +257,4 @@ public partial class GoogleServices
 								? row[(int)DistributorColumnIndex.ShippingAddress].ToString()
 								: string.Empty;
 	}
-
-
-	public async Task<DSMEnvelop<LocationDbEntity, GoogleServices>> UpdateLocation(LocationDbEntity location)
-	{
-		var response = DSMEnvelop<LocationDbEntity, GoogleServices>.Initialize(_logger);
-
-		try
-		{
-			
-		} catch (Exception ex) {
-			response.Error(ex);
-		}
-
-		return response;
-	}
-
 }

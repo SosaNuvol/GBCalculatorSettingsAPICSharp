@@ -70,6 +70,7 @@ public class Program
 				));
 				services.AddSingleton<LocationFacade>();
 				services.AddSingleton<RateChangeFacade>();
+				services.AddSingleton<SettingsFacade>();
 
 				// Register CacheRepository and CacheFacade for ExchangeRateModel
 				services.AddSingleton(sp => new CacheRepository<ExchangeRateModel>(

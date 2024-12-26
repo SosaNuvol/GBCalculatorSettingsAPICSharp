@@ -7,16 +7,12 @@ using Newtonsoft.Json;
 [BsonIgnoreExtraElements]
 public class GeoLocationPoint {
 	[BsonElement("type")]
-	public required string Type { get; set; }
+	[JsonProperty("type")]
+	public required string Type { get; set; } = "Point";
 
 	[BsonElement("coordinates")]
+	[JsonProperty("coordinates")]
 	public required double[] Coordinates { get; set; }
-
-	// [BsonElement("longitude")]
-	// double Longitude { get; set; }
-
-	// [BsonElement("latitude")]
-	// double Latitude { get; set; }
 }
 
 public interface IRateChange
